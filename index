@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Machine Programming Methodology — Controls Engineering Standard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f5f7;
+    --surface: #ffffff;
+    --surface2: #f0f0f2;
+    --border: #d2d2d7;
+    --border-light: #e8e8ed;
+    --accent: #0071e3;
+    --text: #1d1d1f;
+    --text-mid: #6e6e73;
+    --text-dim: #aeaeb2;
+    --text-bright: #000000;
+    --font-mono: 'DM Mono', monospace;
+    --font-sans: 'DM Sans', sans-serif;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-sans); min-height: 100vh; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+
+  header { border-bottom: 1px solid var(--border-light); padding: 0 40px; display: flex; align-items: center; justify-content: space-between; height: 56px; position: sticky; top: 0; z-index: 100; background: rgba(245,245,247,0.85); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .logo-mark { width: 28px; height: 28px; background: var(--accent); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 10px; color: #fff; font-weight: 500; flex-shrink: 0; }
+  .header-title { font-size: 14px; color: var(--text-bright); font-weight: 500; letter-spacing: -0.01em; }
+  .header-right { display: flex; align-items: center; gap: 4px; background: var(--surface2); border-radius: 10px; padding: 3px; }
+  .filter-btn { font-family: var(--font-sans); font-size: 12px; font-weight: 500; padding: 5px 14px; border: none; background: transparent; color: var(--text-mid); cursor: pointer; border-radius: 8px; transition: all 0.18s ease; }
+  .filter-btn:hover { color: var(--text); }
+  .filter-btn.active { background: var(--surface); color: var(--text-bright); box-shadow: var(--shadow-sm); }
+
+  .stats-row { display: flex; padding: 0 40px; border-bottom: 1px solid var(--border-light); background: var(--surface); }
+  .stat { padding: 14px 32px 14px 0; margin-right: 32px; border-right: 1px solid var(--border-light); display: flex; align-items: center; gap: 10px; }
+  .stat:last-child { border-right: none; }
+  .stat-num { font-size: 20px; font-weight: 600; color: var(--text-bright); line-height: 1; letter-spacing: -0.02em; }
+  .stat-label { font-size: 12px; color: var(--text-dim); font-weight: 400; }
+
+  .search-bar { padding: 12px 40px; border-bottom: 1px solid var(--border-light); background: var(--surface); display: flex; align-items: center; }
+  .search-wrap { display: flex; align-items: center; gap: 8px; background: var(--bg); border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 7px 12px; flex: 1; max-width: 360px; transition: border-color 0.15s, box-shadow 0.15s; }
+  .search-wrap:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,113,227,0.12); }
+  .search-icon { color: var(--text-dim); font-size: 14px; }
+  .search-input { background: transparent; border: none; outline: none; color: var(--text); font-family: var(--font-sans); font-size: 13px; width: 100%; }
+  .search-input::placeholder { color: var(--text-dim); }
+
+  .main { display: flex; height: calc(100vh - 156px); min-height: 500px; }
+  .sidebar { width: 260px; border-right: 1px solid var(--border-light); overflow-y: auto; flex-shrink: 0; background: var(--surface); scrollbar-width: thin; scrollbar-color: var(--border-light) transparent; }
+  .content { flex: 1; overflow-y: auto; background: var(--bg); scrollbar-width: thin; scrollbar-color: var(--border-light) transparent; }
+
+  .section-group { border-bottom: 1px solid var(--border-light); }
+  .section-header { padding: 10px 16px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; display: flex; align-items: center; gap: 7px; position: sticky; top: 0; background: rgba(255,255,255,0.92); backdrop-filter: blur(8px); z-index: 1; cursor: pointer; user-select: none; color: var(--text-mid); }
+  .section-header:hover { color: var(--text); }
+  .s-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .s-count { margin-left: auto; color: var(--text-dim); font-size: 11px; font-family: var(--font-mono); }
+  .chevron { color: var(--text-dim); transition: transform 0.2s; font-size: 9px; }
+  .section-group.collapsed .chevron { transform: rotate(-90deg); }
+  .section-group.collapsed .nav-item { display: none; }
+  .nav-item { padding: 8px 16px 8px 28px; font-size: 13px; color: var(--text-mid); cursor: pointer; border-left: 2px solid transparent; transition: all 0.12s; line-height: 1.4; font-weight: 400; }
+  .nav-item:hover { color: var(--text); background: var(--bg); }
+  .nav-item.active { color: var(--text-bright); background: var(--bg); font-weight: 500; border-left-color: var(--accent); }
+  .nav-item.hidden { display: none; }
+  .nav-tag { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); display: block; margin-bottom: 1px; }
+  .no-results { padding: 10px 16px 10px 28px; font-size: 12px; color: var(--text-dim); display: none; }
+
+  .welcome { padding: 60px 48px; max-width: 700px; }
+  .welcome-pre { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 14px; }
+  .welcome-title { font-size: 36px; font-weight: 600; color: var(--text-bright); line-height: 1.15; margin-bottom: 14px; letter-spacing: -0.025em; }
+  .welcome-sub { font-size: 15px; color: var(--text-mid); max-width: 480px; line-height: 1.65; margin-bottom: 20px; font-weight: 300; }
+  .welcome-note { display: flex; align-items: flex-start; gap: 8px; max-width: 480px; background: rgba(0,0,0,0.03); border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 13px; color: var(--text-mid); line-height: 1.6; font-weight: 300; margin-bottom: 32px; }
+  .topic-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 560px; }
+  .topic-card { background: var(--surface); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 18px; cursor: pointer; transition: all 0.2s ease; box-shadow: var(--shadow-sm); }
+  .topic-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+  .tc-icon { width: 30px; height: 30px; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+  .tc-name { font-size: 13px; font-weight: 600; color: var(--text-bright); margin-bottom: 2px; }
+  .tc-sub { font-size: 12px; color: var(--text-dim); }
+
+  .detail-panel { display: none; padding: 40px 48px; max-width: 800px; animation: fadeIn 0.2s ease; }
+  .detail-panel.visible { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+  .d-section-tag { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .d-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .d-title { font-size: 28px; font-weight: 600; color: var(--text-bright); line-height: 1.2; margin-bottom: 28px; letter-spacing: -0.02em; }
+  .prose { font-size: 14px; line-height: 1.75; color: var(--text-mid); font-weight: 300; margin-bottom: 20px; }
+  .prose strong { font-weight: 600; color: var(--text); }
+  .sec-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); margin-bottom: 10px; }
+
+  .table-wrap { background: var(--surface); border: 1px solid var(--border-light); border-radius: var(--radius); overflow: hidden; margin-bottom: 24px; box-shadow: var(--shadow-sm); }
+  .def-table { width: 100%; border-collapse: collapse; }
+  .def-table th { text-align: left; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); padding: 10px 14px; border-bottom: 1px solid var(--border-light); background: var(--bg); }
+  .def-table td { padding: 12px 14px; font-size: 13px; vertical-align: top; border-bottom: 1px solid var(--border-light); line-height: 1.6; }
+  .def-table tr:last-child td { border-bottom: none; }
+  .def-table tr:hover td { background: rgba(0,0,0,0.012); }
+  .def-term { font-weight: 600; color: var(--text-bright); font-size: 13px; white-space: nowrap; }
+  .def-desc { color: var(--text-mid); font-weight: 300; }
+
+  .cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+  .info-card { background: var(--surface); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow-sm); }
+  .ic-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); margin-bottom: 6px; }
+  .ic-title { font-size: 14px; font-weight: 600; color: var(--text-bright); margin-bottom: 6px; letter-spacing: -0.01em; }
+  .ic-desc { font-size: 13px; color: var(--text-mid); line-height: 1.6; font-weight: 300; }
+
+  .sm-wrap { background: var(--surface); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 24px; margin-bottom: 24px; box-shadow: var(--shadow-sm); }
+  .sm-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); margin-bottom: 18px; }
+  .sm-grid-10 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .sm-grid-4 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; max-width: 320px; }
+  .state-node { border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 8px; cursor: pointer; transition: all 0.18s ease; text-align: center; background: var(--bg); }
+  .state-node:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+  .state-node.sel { border-color: var(--accent); background: rgba(0,113,227,0.05); box-shadow: 0 0 0 3px rgba(0,113,227,0.1); }
+  .state-node.wait { border-style: dashed; }
+  .sn-name { font-size: 12px; font-weight: 600; color: var(--text-bright); margin-bottom: 2px; }
+  .sn-type { font-size: 10px; color: var(--text-dim); font-family: var(--font-mono); }
+  .state-detail-box { background: rgba(0,113,227,0.04); border: 1px solid rgba(0,113,227,0.15); border-left: 3px solid var(--accent); border-radius: var(--radius-sm); padding: 14px 18px; font-size: 13px; line-height: 1.65; color: var(--text-mid); margin-top: 16px; display: none; }
+  .state-detail-box.show { display: block; }
+  .sd-title { font-size: 13px; font-weight: 600; color: var(--text-bright); margin-bottom: 6px; }
+  .cmd-row { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 5px; }
+  .cmd-tag { font-size: 11px; font-family: var(--font-mono); padding: 3px 9px; border-radius: 100px; background: rgba(0,113,227,0.07); border: 1px solid rgba(0,113,227,0.18); color: var(--accent); }
+
+  .swatch-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px; }
+  .swatch { border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border-light); box-shadow: var(--shadow-sm); }
+  .sw-color { height: 52px; }
+  .sw-info { background: var(--surface); padding: 10px 12px; }
+  .sw-name { font-size: 12px; font-weight: 600; color: var(--text-bright); margin-bottom: 2px; }
+  .sw-hex { font-size: 11px; font-family: var(--font-mono); color: var(--text-dim); }
+  .sw-meaning { font-size: 11px; color: var(--text-mid); margin-top: 3px; }
+
+  .alarm-stack { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+  .alarm-card { background: var(--surface); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow-sm); display: flex; gap: 14px; align-items: flex-start; }
+  .alarm-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 3px; flex-shrink: 0; }
+  .alarm-body {}
+  .alarm-priority { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); margin-bottom: 4px; }
+  .alarm-title { font-size: 14px; font-weight: 600; color: var(--text-bright); margin-bottom: 4px; }
+  .alarm-desc { font-size: 13px; color: var(--text-mid); line-height: 1.6; font-weight: 300; }
+
+  .mono-tag { font-family: var(--font-mono); font-size: 12px; background: var(--bg); padding: 2px 7px; border-radius: 4px; border: 1px solid var(--border-light); }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="logo-mark">CE</div>
+    <span class="header-title">Machine Programming Methodology</span>
+  </div>
+  <div class="header-right">
+    <button class="filter-btn active" onclick="filterSection('all',this)">All</button>
+    <button class="filter-btn" onclick="filterSection('architecture',this)">Architecture</button>
+    <button class="filter-btn" onclick="filterSection('states',this)">States</button>
+    <button class="filter-btn" onclick="filterSection('devices',this)">Devices</button>
+    <button class="filter-btn" onclick="filterSection('alarms',this)">Alarms &amp; Safety</button>
+    <button class="filter-btn" onclick="filterSection('hmi',this)">HMI</button>
+  </div>
+</header>
+
+<div class="stats-row">
+  <div class="stat"><div class="stat-num">S88</div><div class="stat-label">Standard basis (simplified)</div></div>
+  <div class="stat"><div class="stat-num">10</div><div class="stat-label">Machine Manager states</div></div>
+  <div class="stat"><div class="stat-num">4</div><div class="stat-label">Module Manager states</div></div>
+  <div class="stat"><div class="stat-num">4</div><div class="stat-label">Alarm priority levels</div></div>
+</div>
+
+<div class="search-bar">
+  <div class="search-wrap">
+    <span class="search-icon">⌕</span>
+    <input class="search-input" type="text" placeholder="Search topics…" oninput="searchTopics(this.value)" id="search-input">
+  </div>
+</div>
+
+<div class="main">
+  <div class="sidebar" id="sidebar">
+
+    <div class="section-group" id="group-architecture">
+      <div class="section-header" onclick="toggleGroup('group-architecture')">
+        <span class="s-dot" style="background:#0071e3"></span><span>Architecture</span>
+        <span class="s-count">4</span><span class="chevron">▾</span>
+      </div>
+      <div class="nav-item" data-section="architecture" data-title="system overview levels scada ignition" onclick="showTopic('system-overview')"><span class="nav-tag">1.0</span>System Overview</div>
+      <div class="nav-item" data-section="architecture" data-title="design hierarchy physical model parent child equipment" onclick="showTopic('hierarchy')"><span class="nav-tag">1.1</span>Design Hierarchy</div>
+      <div class="nav-item" data-section="architecture" data-title="standard definitions terminology machine module sequence operation" onclick="showTopic('definitions')"><span class="nav-tag">1.2</span>Standard Definitions</div>
+      <div class="nav-item" data-section="architecture" data-title="sequencer functions steps" onclick="showTopic('sequencer')"><span class="nav-tag">1.3</span>Sequencer &amp; Functions</div>
+      <div class="no-results" id="no-architecture">No matches</div>
+    </div>
+
+    <div class="section-group" id="group-states">
+      <div class="section-header" onclick="toggleGroup('group-states')">
+        <span class="s-dot" style="background:#5856d6"></span><span>States</span>
+        <span class="s-count">3</span><span class="chevron">▾</span>
+      </div>
+      <div class="nav-item" data-section="states" data-title="machine manager state machine homing running aborting pausing" onclick="showTopic('machine-manager')"><span class="nav-tag">2.0</span>Machine Manager</div>
+      <div class="nav-item" data-section="states" data-title="module manager states starting started stopping stopped" onclick="showTopic('module-manager')"><span class="nav-tag">2.1</span>Module Manager</div>
+      <div class="nav-item" data-section="states" data-title="substates conditional commands auto manual modes" onclick="showTopic('substates')"><span class="nav-tag">2.2</span>Substates &amp; Modes</div>
+      <div class="no-results" id="no-states">No matches</div>
+    </div>
+
+    <div class="section-group" id="group-devices">
+      <div class="section-header" onclick="toggleGroup('group-devices')">
+        <span class="s-dot" style="background:#30b865"></span><span>Devices</span>
+        <span class="s-count">3</span><span class="chevron">▾</span>
+      </div>
+      <div class="nav-item" data-section="devices" data-title="control modules actuated devices encapsulated code" onclick="showTopic('control-modules')"><span class="nav-tag">3.0</span>Control Modules</div>
+      <div class="nav-item" data-section="devices" data-title="permissives interlocks prevent stop" onclick="showTopic('permissives')"><span class="nav-tag">3.1</span>Permissives &amp; Interlocks</div>
+      <div class="nav-item" data-section="devices" data-title="errors faults recovery framework" onclick="showTopic('errors')"><span class="nav-tag">3.2</span>Errors &amp; Recovery</div>
+      <div class="no-results" id="no-devices">No matches</div>
+    </div>
+
+    <div class="section-group" id="group-alarms">
+      <div class="section-header" onclick="toggleGroup('group-alarms')">
+        <span class="s-dot" style="background:#ff3b30"></span><span>Alarms &amp; Safety</span>
+        <span class="s-count">2</span><span class="chevron">▾</span>
+      </div>
+      <div class="nav-item" data-section="alarms" data-title="alarm hierarchy priority critical fault warning diagnostic" onclick="showTopic('alarms')"><span class="nav-tag">4.0</span>Alarm Hierarchy</div>
+      <div class="nav-item" data-section="alarms" data-title="safety behaviors estop request to enter protected space" onclick="showTopic('safety')"><span class="nav-tag">4.1</span>Safety Behaviors</div>
+      <div class="no-results" id="no-alarms">No matches</div>
+    </div>
+
+    <div class="section-group" id="group-hmi">
+      <div class="section-header" onclick="toggleGroup('group-hmi')">
+        <span class="s-dot" style="background:#ff9500"></span><span>HMI</span>
+        <span class="s-count">3</span><span class="chevron">▾</span>
+      </div>
+      <div class="nav-item" data-section="hmi" data-title="hmi color standards green red yellow gray blue" onclick="showTopic('hmi-colors')"><span class="nav-tag">5.0</span>Color Standards</div>
+      <div class="nav-item" data-section="hmi" data-title="hmi layout required features tabs commission safety alarms" onclick="showTopic('hmi-layout')"><span class="nav-tag">5.1</span>Layout &amp; Required Features</div>
+      <div class="nav-item" data-section="hmi" data-title="naming conventions tags labels plc" onclick="showTopic('naming')"><span class="nav-tag">5.2</span>Naming Conventions</div>
+      <div class="no-results" id="no-hmi">No matches</div>
+    </div>
+
+  </div>
+
+  <div class="content" id="content">
+
+    <!-- WELCOME -->
+    <div class="welcome" id="welcome">
+      <div class="welcome-pre">Controls Engineering Standard · Rev 1.0</div>
+      <div class="welcome-title">Machine Programming<br>Methodology</div>
+      <div class="welcome-sub">A programming standard for controls architecture, state machine design, device management, alarm hierarchy, and HMI layout — built on S88 and PackML principles. Select any topic from the sidebar to explore.</div>
+      <div class="welcome-note">
+        <span style="color:var(--text-dim);flex-shrink:0;margin-top:1px">ℹ︎</span>
+        Developed and implemented at Heirloom Carbon Technologies. Defines architecture for Beckhoff TwinCAT3 and Ignition SCADA deployments; adaptable across IEC 61131-3 platforms.
+      </div>
+      <div class="topic-cards">
+        <div class="topic-card" onclick="showTopic('machine-manager')">
+          <div class="tc-icon" style="background:rgba(88,86,214,0.1)">🔄</div>
+          <div class="tc-name">State Machine</div><div class="tc-sub">Interactive explorer</div>
+        </div>
+        <div class="topic-card" onclick="showTopic('definitions')">
+          <div class="tc-icon" style="background:rgba(0,113,227,0.1)">📖</div>
+          <div class="tc-name">Definitions</div><div class="tc-sub">12 standard terms</div>
+        </div>
+        <div class="topic-card" onclick="showTopic('alarms')">
+          <div class="tc-icon" style="background:rgba(255,59,48,0.1)">🚨</div>
+          <div class="tc-name">Alarm Hierarchy</div><div class="tc-sub">4 priority levels</div>
+        </div>
+        <div class="topic-card" onclick="showTopic('hmi-colors')">
+          <div class="tc-icon" style="background:rgba(255,149,0,0.1)">🎨</div>
+          <div class="tc-name">HMI Colors</div><div class="tc-sub">7 standard colors</div>
+        </div>
+        <div class="topic-card" onclick="showTopic('permissives')">
+          <div class="tc-icon" style="background:rgba(48,184,101,0.1)">🔒</div>
+          <div class="tc-name">Permissives</div><div class="tc-sub">&amp; Interlocks</div>
+        </div>
+        <div class="topic-card" onclick="showTopic('errors')">
+          <div class="tc-icon" style="background:rgba(255,59,48,0.08)">⚠︎</div>
+          <div class="tc-name">Fault Types</div><div class="tc-sub">Recovery framework</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1.0 SYSTEM OVERVIEW -->
+    <div class="detail-panel" id="topic-system-overview">
+      <div class="d-section-tag"><div class="d-dot" style="background:#0071e3"></div><span style="color:#0071e3">Architecture</span><span style="color:var(--text-dim)">&nbsp;·&nbsp;1.0</span></div>
+      <div class="d-title">System Overview</div>
+      <p class="prose">This standard implements a <strong>multi-level architecture</strong> across the total automation system. Each level has a defined purpose and is not necessarily dependent on the others. The core focus is automated machines and their programming architecture.</p>
+      <div class="sec-label">System Levels</div>
+      <div class="table-wrap">
+        <table class="def-table">
+          <thead><tr><th>System</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><span class="def-term">Operating System (Software)</span></td><td class="def-desc">Overall brains of the processes. Key business decisions, process setpoints, traceability, and condition monitoring. Strings together operations via sequence requests but does not directly control machines.</td></tr>
+            <tr><td><span class="def-term">HMI — Ignition SCADA</span></td><td class="def-desc">Responsible for direct control of machines and circumvention of upper-level software when needed. Used for operator interfaces during commissioning and maintenance, visual SCADA overviews, and variable historization to a SQL database.</td></tr>
+            <tr><td><span class="def-term">Machine (PLC)</span></td><td class="def-desc">A combination of electrical, mechanical, and programming components that allow processes to run. Machines can be Discrete, Continuous, or Batch. This document defines how to design the programming component.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 1.1 HIERARCHY -->
+    <div class="detail-panel" id="topic-hierarchy">
+      <div class="d-section-tag"><div class="d-dot" style="background:#0071e3"></div><span style="color:#0071e3">Architecture</span><span style="color:var(--text-dim)">&nbsp;·&nbsp;1.1</span></div>
+      <div class="d-title">Design Hierarchy</div>
+      <p class="prose">The design hierarchy is drawn from two models: a <strong>Physical Model</strong> (physical processing and control equipment grouped by purpose) and a <strong>Procedural Model</strong> (operations that execute controlled actions in ordered sequences).</p>
+      <div class="sec-label" style="margin-bottom:16px">Physical Model — Equipment Hierarchy</div>
+      <div style="background:var(--surface);border:1px solid var(--border-light);border-radius:var(--radius);padding:24px;margin-bottom:24px;box-shadow:var(--shadow-sm);">
+        <div style="display:flex;flex-direction:column;align-items:flex-start;">
+          <div style="background:rgba(0,113,227,0.08);border:1.5px solid rgba(0,113,227,0.3);border-radius:10px;padding:10px 20px;font-size:13px;font-weight:600;color:#0071e3;">Machine Manager (FB_Machine)</div>
+          <div style="width:2px;height:16px;background:var(--border-light);margin-left:30px;"></div>
+          <div style="display:flex;gap:10px;padding-left:16px;border-left:2px solid var(--border-light);margin-left:30px;padding-top:8px;padding-bottom:8px;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+              <div style="background:rgba(88,86,214,0.08);border:1.5px solid rgba(88,86,214,0.25);border-radius:10px;padding:9px 16px;font-size:12px;font-weight:600;color:#5856d6;">Module Manager (FB_Module)</div>
+              <div style="display:flex;gap:8px;">
+                <div style="background:rgba(48,184,101,0.07);border:1.5px dashed rgba(48,184,101,0.35);border-radius:8px;padding:7px 12px;font-size:11px;font-weight:500;color:#28a057;">Control Module</div>
+                <div style="background:rgba(48,184,101,0.07);border:1.5px dashed rgba(48,184,101,0.35);border-radius:8px;padding:7px 12px;font-size:11px;font-weight:500;color:#28a057;">Control Module</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;padding-left:10px;">
+              <div style="background:rgba(48,184,101,0.07);border:1.5px dashed rgba(48,184,101,0.35);border-radius:8px;padding:9px 14px;font-size:12px;font-weight:500;color:#28a057;">Control Module</div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border-light);display:flex;gap:20px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-mid)"><div style="width:18px;height:2px;background:rgba(0,113,227,0.4);"></div>Equipment Class — drives child actions (solid border)</div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-mid)"><div style="width:18px;height:2px;border-top:2px dashed rgba(48,184,101,0.5);"></div>Device Class — pre-programmed, machine-agnostic (dashed)</div>
+        </div>
+      </div>
+      <div class="sec-label">Key Rules</div>
+      <div class="table-wrap">
+        <table class="def-table">
+          <tbody>
+            <tr><td><span class="def-term">Parent → Child Commands</span></td><td class="def-desc">A "parent" is always a Machine or Module instance. A "child" can be either a Module or Device. Commands routed through the parent drive procedural actions of its children.</td></tr>
+            <tr><td><span class="def-term">Equipment Class</span></td><td class="def-desc">Equipment can operate as a Parent and drive actions through sequential or conditional logic. Machine-specific, but extends the library FB_Machine or FB_Module base class.</td></tr>
+            <tr><td><span class="def-term">Device Class</span></td><td class="def-desc">Devices are child components with pre-programmed actions common across machines. On abort or stop, devices are commanded to a safe state by their parent.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 1.2 DEFINITIONS -->
+    <div class="detail-panel" id="topic-definitions">
+      <div class="d-section-tag"><div class="d-dot" style="background:#0071e3"></div><span style="color:#0071e3">Architecture</span><span style="color:var(--text-dim)">&nbsp;·&nbsp;1.2</span></div>
+      <div class="d-title">Standard Definitions</div>
+      <p class="prose">Nomenclature is foundational to consistent software design. All terms below are applied uniformly across PLC code, HMI labels, and documentation.</p>
+      <div class="table-wrap">
+        <table class="def-table">
+          <thead><tr><th style="width:170px">Term</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><span class="def-term">Machine</span></td><td class="def-desc">An entire production machine based on a <strong>10-state model</strong> including pausing and homing. Every machine extends FB_Machine. Use when a complex homing sequence is required to return to a known good state.</td></tr>
+            <tr><td><span class="def-term">Module</span></td><td class="def-desc">A simpler production machine based on a <strong>4-state model</strong>. Extends FB_Module. Distinguishable because the Home option is not available.</td></tr>
+            <tr><td><span class="def-term">Sequence</span></td><td class="def-desc">An ordered list of executable device actions. Only used in automatic mode of machines or modules.</td></tr>
+            <tr><td><span class="def-term">Operation</span></td><td class="def-desc">A combination of multiple sequences achieving an overarching objective (e.g. Pick + Place = tray transfer). Typically defined by upper-level SCADA, or on the machine itself.</td></tr>
+            <tr><td><span class="def-term">Control Module (CM)</span></td><td class="def-desc">A device or combination of devices operated as a single action. The lowest level that carries out basic functions — valves, clamps, motors. Core code lives here and is transferable machine-to-machine without changes.</td></tr>
+            <tr><td><span class="def-term">Function</span></td><td class="def-desc">Interfaces between sequences and control modules. Calls specific device actions and waits for a response before advancing. Only one function per machine may be active at a time.</td></tr>
+            <tr><td><span class="def-term">Conditional Command</span></td><td class="def-desc">Any programmed device actuation done outside of a sequence, based on specific conditions. Used in auto mode only. Does not depend on machine history.</td></tr>
+            <tr><td><span class="def-term">Machine State</span></td><td class="def-desc">A condition of the machine determined by previous inputs, which defines actions on following inputs. States determine whether the machine is in Auto or Manual mode.</td></tr>
+            <tr><td><span class="def-term">Machine Mode (Auto)</span></td><td class="def-desc">Executes sequences issued by SCADA, the HMI, or conditional logic based on sensor status.</td></tr>
+            <tr><td><span class="def-term">Machine Mode (Manual)</span></td><td class="def-desc">Allows the operator to manipulate devices independently through the HMI. Modes are determined by state and passed down to child components.</td></tr>
+            <tr><td><span class="def-term">Operator Command (ocmd)</span></td><td class="def-desc">Commands accepted by components in Manual mode. Issued via the HMI operator interface.</td></tr>
+            <tr><td><span class="def-term">Program Command (pcmd)</span></td><td class="def-desc">Commands accepted by components in Auto mode. Issued programmatically by sequences or conditional logic.</td></tr>
+            <tr><td><span class="def-term">Control Command (ccmd)</span></td><td class="def-desc">Accessible in all modes. Includes Reset, Enable/Disable Simulation, Enable/Disable Bypass, Enable/Disable Manual Override.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 1.3 SEQUENCER -->
+    <div class="detail-panel" id="topic-sequencer">
+      <div class="d-section-tag"><div class="d-dot" style="background:#0071e3"></div><span style="color:#0071e3">Architecture</span><span style="color:var(--text-dim)">&nbsp;·&nbsp;1.3</span></div>
+      <div class="d-title">Sequencer &amp; Functions</div>
+      <p class="prose">The sequencer enables sequential control of a defined group of control devices via ordered steps. It allows creation of steps executable from multiple code sections without duplicate logic. Only one sequence may run at a given time.</p>
+      <div class="sec-label">Sequencer Rules</div>
+      <div class="table-wrap" style="margin-bottom:24px;">
+        <table class="def-table">
+          <tbody>
+            <tr><td><span class="def-term">Permissives required</span></td><td class="def-desc">Each sequence must define permissives — all must be true before the sequence may start. Sequences do not have interlocks.</td></tr>
+            <tr><td><span class="def-term">Auto-execute in transient states</span></td><td class="def-desc">Certain sequences execute automatically in transient states (e.g. homing sequence in Homing state) if permissives are met. Execute only in Acting States by request otherwise.</td></tr>
+            <tr><td><span class="def-term">Auto mode only</span></td><td class="def-desc">Sequences execute only in states that correspond to automatic mode — all states except Paused, Stopped, and Aborted.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="sec-label">Sequencer Function Responsibilities</div>
+      <div class="cards-grid">
+        <div class="info-card"><div class="ic-label">Command</div><div class="ic-title">Issue device actions</div><div class="ic-desc">Commands a control module, multiple modules, or executes branches. Can issue parallel commands; custom logic is performed external to the function.</div></div>
+        <div class="info-card"><div class="ic-label">Monitor</div><div class="ic-title">Track failures &amp; timeouts</div><div class="ic-desc">Monitors failures or timeouts of the active function and surfaces fault codes up the hierarchy.</div></div>
+        <div class="info-card"><div class="ic-label">Advance</div><div class="ic-title">Set complete signal</div><div class="ic-desc">Sets a complete signal to advance to the next sequence index, or branch to a different location within the sequencer array.</div></div>
+        <div class="info-card"><div class="ic-label">Retry</div><div class="ic-title">Retry logic</div><div class="ic-desc">Attempts to fix the problem via external logic, or as simply as re-issuing the previous control module commands.</div></div>
+      </div>
+    </div>
+
+    <!-- 2.0 MACHINE MANAGER -->
+    <div class="detail-panel" id="topic-machine-manager">
+      <div class="d-section-tag"><div class="d-dot" style="background:#5856d6"></div><span style="color:#5856d6">States</span><span style="color:var(--text-dim)">&nbsp;·&nbsp;2.0</span></div>
+      <div class="d-title">Machine Manager</div>
+      <p class="prose">The Machine Manager transitions the machine between states (and modes). Based on a <strong>10-state model</strong> derived from PackML, reduced from 17 states. Click any state node to view its description and valid commands.</p>
+      <div class="sm-wrap">
+        <div class="sm-label">MACHINE MANAGER STATE MACHINE — click a state to explore</div>
+        <div class="sm-grid-10" id="mm-grid"></div>
+        <div class="state-detail-box" id="mm-detail"></div>
+      </div>
+      <div style="display:flex;gap:20px;margin-bottom:24px;font-size:12px;color:var(--text-mid);">
+        <div style="display:flex;align-items:center;gap:6px;"><div style="width:22px;height:14px;border:1.5px solid var(--border);border-radius:4px;background:var(--bg);"></div>Acting State — executes code and sequences</div>
+        <div style="display:flex;align-items:center;gap:6px;"><div style="width:22px;height:14px;border:1.5px dashed var(--border);border-radius:4px;background:var(--bg);"></div>Wait State — stable, awaits command or interrupt</div>
+      </div>
+      <div class="sec-label">Entry / Exit Permissives</div>
+      <p class="prose">Each Acting State has entry and exit permissives. A state can only be entered if entry permissives are met; it exits by command or when State Complete permissives are met. Naming convention: <strong>PermHome</strong>, <strong>PermHomeComplete</strong>.</p>
+      <p class="prose">Interrupts such as E-STOP or safety breach cause state transitions before a complete signal is received — e.g. an E-STOP while Running transitions immediately to Aborting.</p>
+    </div>
+
+    <!-- 2.1 MODULE MANAGER -->
+    <div class="detail-panel" id="topic-module-manager">
+      <div class="d-section-tag"><div class="d-dot" style="background:#5856d6"></div><span style="color:#5856d6">States</span><span style="color:var(--text-dim)">&nbsp;·&nbsp;2.1</span></div>
+      <div class="d-title">Module Manager</div>
+      <p class="prose">The Module Manager functions like the Machine Manager in simplified form — a <strong>4-state model</strong>. Modules are distinguishable because the "Home" option is not available. Click any state to explore.</p>
+      <div class="sm-wrap">
+        <div class="sm-label">MODULE MANAGER STATE MACHINE — click a state to explore</div>
+        <div class="sm-grid-4" id="mod-grid"></div>
+        <div class="state-detail-box" id="mod-detail"></div>
+      </div>
+      <div class="sec-label">Key Differences from Machine Manager</div>
+      <div class="table-wrap">
+        <table class="def-table">
+          <tbody>
+            <tr><td><span class="def-term">No Homing</span></td><td class="def-desc">Modules have a Starting state that transitions directly into Started. No complex homing sequence — may only enforce valve positions or known device states.</td></tr>
+            <tr><td><span class="def-term">Stopping vs. Aborting</span></td><td class="def-desc">On E-STOP while in Started state, the module transitions to Stopping (not Aborting). Stopped does not guarantee a safe state.</td></tr>
+            <tr><td><span class="def-term">Recovery</span></td><td class="def-desc">The only automated path to reset a known state is to Start the module again. A Reset command can also be issued by the operator.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 2.2 SUBSTATES -->
+    <div class="detail-panel" id="topic-substates">
+      <div class="d-section-tag"><div class="d-dot" style="background:#5856d6"></div><span style="color:#5856d6">States</span><span style="color:var(--text-dim)">&nbsp;·&nbsp;2.2</span></div>
+      <div class="d-title">Substates &amp; Modes</div>
+      <p class="prose">Substates are custom-defined states inside Running or Starting that provide more granularity than the standard state machine. Each substate may or may not run a sequence within it.</p>
+      <div class="sec-label">Substate Types</div>
+      <div class="cards-grid" style="margin-bottom:24px;">
+        <div class="info-card"><div class="ic-label">Transient Substates</div><div class="ic-title">Typically run sequences</div><div class="ic-desc">Execute sequences within them and move to another state upon completion. Do not linger awaiting a command.</div></div>
+        <div class="info-card"><div class="ic-label">Final Substates</div><div class="ic-title">Conditional logic only</div><div class="ic-desc">Do not run sequences. Execute conditional logic that responds to real-time machine and sensor conditions.</div></div>
+      </div>
+      <div class="sec-label">Conditional Commands</div>
+      <p class="prose">A <strong>conditional command</strong> controls devices or modules asynchronously and is not dependent on any history of a machine or module — it does not live inside a sequence. It can and likely does depend on current states and substates.</p>
+      <div class="sec-label">Auto vs. Manual Mode</div>
+      <div class="table-wrap">
+        <table class="def-table">
+          <tbody>
+            <tr><td><span class="def-term">Auto Mode</span></td><td class="def-desc">Executes sequences issued by SCADA, the HMI, or conditional logic. Active in Running, Homing, and other acting states.</td></tr>
+            <tr><td><span class="def-term">Manual Mode</span></td><td class="def-desc">Allows the operator to manipulate devices independently through the HMI. Active in Paused, Stopped, and Aborted states.</td></tr>
+            <tr><td><span class="def-term">Manual Override</span></td><td class="def-desc">A child component can temporarily overwrite the parent mode. Override is available in both modes but is only useful in Auto. Must be time-limited at a configurable access level.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 3.0 CONTROL MODULES -->
+    <div class="detail-panel" id="topic-control-modules">
+      <div class="d-section-tag"><div class="d-dot" style="background:#30b865"></div><span style="color:#30b865">Devices</span><span style="color:var(--text-dim)">&nbsp;·&nbsp;3.0</span></div>
+      <div class="d-title">Control Modules</div>
+      <p class="prose">Control Modules are encapsulated code — an AOI in Ladder Logic or a Function Block in Structured Text — that directly controls a single device. Designed to be validated independently and transferred machine-to-machine without core code changes.</p>
+      <div class="sec-label">Required CM Properties</div>
+      <div class="table-wrap">
+        <table class="def-table">
+          <tbody>
+            <tr><td><span class="def-term">Permissives</span></td><td class="def-desc">Allow a command to initiate an action. Default to TRUE if not applicable.</td></tr>
+            <tr><td><span class="def-term">Interlocks</span></td><td class="def-desc">Stop an action currently being executed. Default to TRUE if not applicable.</td></tr>
+            <tr><td><span class="def-term">Command Inputs</span></td><td class="def-desc">Separate inputs for Program Commands (pcmd), Operator Commands (ocmd), and Control Commands (ccmd).</td></tr>
+            <tr><td><span class="def-term">Command Unlatching</span></td><td class="def-desc">Commands must be unlatched during the processing of actions to prevent repeat triggering.</td></tr>
+            <tr><td><span class="def-term">Fault Flag</span></td><td class="def-desc">An error sets the module's 'faulted' flag, which is a logical OR of all active errors. Built-in monitoring required.</td></tr>
+            <tr><td><span class="def-term">Statistics / Metrics</span></td><td class="def-desc">Design-in when applicable: uptime vs. downtime, actuator transit time, cycle count.</td></tr>
+            <tr><td><span class="def-term">Status Bits</span></td><td class="def-desc">Readable by outside programs for monitoring and diagnostics.</td></tr>
+            <tr><td><span class="def-term">Reset Command (ccmd)</span></td><td class="def-desc">Clears internal tags, status bits, and input — but not configuration.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 3.1 PERMISSIVES -->
+    <div class="detail-panel" id="topic-permissives">
+      <div class="d-section-tag"><div class="d-dot" style="background:#30b865"></div><span style="color:#30b865">Devices</span><span style="color:var(--text-dim)">&nbsp;·&nbsp;3.1</span></div>
+      <div class="d-title">Permissives &amp; Interlocks</div>
+      <p class="prose">Permissives and interlocks are the primary mechanisms to prevent machine damage and visualize why a machine is not proceeding. Both must be exposed on the HMI with text descriptions per bit.</p>
+      <div class="cards-grid" style="margin-bottom:24px;">
+        <div class="info-card" style="border-left:3px solid #30b865;">
+          <div class="ic-label">Permissives</div><div class="ic-title">Prevent something from starting</div>
+          <div class="ic-desc">Prevents a command from initiating its associated action, prevents a transition state from completing, or prevents a Sequence Step from advancing. Evaluated before an action begins.</div>
+        </div>
+        <div class="info-card" style="border-left:3px solid #ff3b30;">
+          <div class="ic-label">Interlocks</div><div class="ic-title">Stop an action in progress</div>
+          <div class="ic-desc">A subset of permissives. Primary purpose is to stop an action while it is operational. Also evaluated at command time to prevent initiating actions known to fail.</div>
+        </div>
+      </div>
+      <div class="sec-label">Interlock Scenarios</div>
+      <div class="table-wrap">
+        <table class="def-table">
+          <thead><tr><th style="width:80px">Scenario</th><th>Use Case</th></tr></thead>
+          <tbody>
+            <tr><td><span class="def-term">1</span></td><td class="def-desc">Machine Manager in Auto — auto interlock drops (E-STOP, loss of air) → machine goes to manual. Immediately stops the active sequence.</td></tr>
+            <tr><td><span class="def-term">2</span></td><td class="def-desc">Prevent actuators from crashing during movement — position-based interlocks block motion if an adjacent device is in the path.</td></tr>
+            <tr><td><span class="def-term">3</span></td><td class="def-desc">Coordinated servo actions — stop movement if servos become decoupled or lose synchronization.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 3.2 ERRORS -->
+    <div class="detail-panel" id="topic-errors">
+      <div class="d-section-tag"><div class="d-dot" style="background:#30b865"></div><span style="color:#30b865">Devices</span><span style="color:var(--text-dim)">&nbsp;·&nbsp;3.2</span></div>
+      <div class="d-title">Errors &amp; Recovery</div>
+      <p class="prose"><strong>Error</strong> is a superset that includes device faults (e.g. servo drive faults) and other conditions such as receiving an operator command in auto mode. Each error requires a defined recovery strategy.</p>
+      <div class="sec-label">Fault Types</div>
+      <div class="table-wrap" style="margin-bottom:24px;">
+        <table class="def-table">
+          <thead><tr><th>Event</th><th>Can Cause</th><th>Expected Result</th><th>Expected Resolution</th></tr></thead>
+          <tbody>
+            <tr><td><span class="def-term">Device Fault</span></td><td class="def-desc">Sequencer Function Fault, Manager Fault</td><td class="def-desc">Device turns Red on HMI. Diagnostic event logged.</td><td class="def-desc">Reset Device or Reset its Parent Manager.</td></tr>
+            <tr><td><span class="def-term">Sequencer Function Fault</span></td><td class="def-desc">Sequencer Fault</td><td class="def-desc">Generates a Sequencer Fault with fault code. Logged at sequence and manager level.</td><td class="def-desc">If salvageable: pause, address, then Proceed or Retry. Otherwise: Abort.</td></tr>
+            <tr><td><span class="def-term">Sequencer Fault</span></td><td class="def-desc">Manager Fault</td><td class="def-desc">Fault code displayed to user and logged. Propagated up to Manager.</td><td class="def-desc">Operator Reset, or reset by next successful sequence call.</td></tr>
+            <tr><td><span class="def-term">Machine/Module Manager Fault</span></td><td class="def-desc">Top-level fault, may require software handling</td><td class="def-desc">Fault code displayed and logged for the equipment.</td><td class="def-desc">(1) Error condition disappears, (2) Software clears the error, or (3) Homing/Starting state.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="sec-label">Recovery Strategy Framework</div>
+      <div class="cards-grid">
+        <div class="info-card"><div class="ic-label">Auto-Recoverable (Machine)</div><div class="ic-title">Fully automated</div><div class="ic-desc">Machine detects and resolves the condition without operator intervention. Preferred when sensorization allows for it.</div></div>
+        <div class="info-card"><div class="ic-label">Auto-Recoverable (Software)</div><div class="ic-title">Software-initiated</div><div class="ic-desc">Higher-level software service detects the fault and issues the appropriate recovery command to the machine.</div></div>
+        <div class="info-card"><div class="ic-label">Manual Recovery</div><div class="ic-title">Operator intervention</div><div class="ic-desc">Operator confirms machine state before recovery proceeds. Escalated via SCADA alarms to the correct individual.</div></div>
+        <div class="info-card"><div class="ic-label">Fault Propagation Rule</div><div class="ic-title">Inherit only if halting product</div><div class="ic-desc">Manager inherits child fault only if the fault causes it to halt product processing. Otherwise, lower-level fault is displayed on HMI but not passed up.</div></div>
+      </div>
+    </div>
+
+    <!-- 4.0 ALARMS -->
+    <div class="detail-panel" id="topic-alarms">
+      <div class="d-section-tag"><div class="d-dot" style="background:#ff3b30"></div><span style="color:#ff3b30">Alarms &amp; Safety</span><span style="color:var(--text-dim)">&nbsp;·&nbsp;4.0</span></div>
+      <div class="d-title">Alarm Hierarchy</div>
+      <p class="prose">Alarms are classified by priority. General hierarchy: <strong>Critical Alarm &gt; Machine Fault &gt; Warning &gt; Diagnostic</strong>. A machine cannot be faulted and running at the same time — use warnings or diagnostics for non-halting alerts.</p>
+      <div class="alarm-stack">
+        <div class="alarm-card"><div class="alarm-dot" style="background:#ff3b30"></div><div class="alarm-body"><div class="alarm-priority">Critical Alarm · Highest Priority</div><div class="alarm-title">Safety device or critical function failure</div><div class="alarm-desc">Any critical safety device (E-STOP, safety mat, gate, light curtain) that causes machine stoppage, or critical functions such as Air and Power.</div></div></div>
+        <div class="alarm-card"><div class="alarm-dot" style="background:#ff6b35"></div><div class="alarm-body"><div class="alarm-priority">Machine Fault · High Priority</div><div class="alarm-title">Event that has stopped the machine</div><div class="alarm-desc">Generally a sequence fault or state fault. Must show as RED on the UI. One alarm message per machine fault. A machine cannot be faulted and running simultaneously.</div></div></div>
+        <div class="alarm-card"><div class="alarm-dot" style="background:#ff9500"></div><div class="alarm-body"><div class="alarm-priority">Warning · Medium Priority</div><div class="alarm-title">Condition that may stop the machine</div><div class="alarm-desc">Any alarm that may cause a future stoppage — e.g. low limit switches on tanks, temperature warnings. Shows as YELLOW on the UI.</div></div></div>
+        <div class="alarm-card"><div class="alarm-dot" style="background:#aeaeb2"></div><div class="alarm-body"><div class="alarm-priority">Diagnostic · Informational</div><div class="alarm-title">Possible issue, not a confirmed stop cause</div><div class="alarm-desc">Indicates an issue but cannot be determined as the reason the machine stopped. Does not halt the machine.</div></div></div>
+      </div>
+      <div class="sec-label">Process Alarms — Continuous Machines</div>
+      <div class="table-wrap">
+        <table class="def-table">
+          <thead><tr><th>Level</th><th>Typical Response</th></tr></thead>
+          <tbody>
+            <tr><td><span class="def-term">HiHi</span></td><td class="def-desc">Interlock out the device — e.g. if Supply Tank reaches HiHi, interlock out the supply pump to that tank.</td></tr>
+            <tr><td><span class="def-term">Hi</span></td><td class="def-desc">Drive a machine event — e.g. command a stop sequence to return devices (pump, valves).</td></tr>
+            <tr><td><span class="def-term">Lo</span></td><td class="def-desc">Drive a machine event — e.g. command the nutrient inject to start a fill process.</td></tr>
+            <tr><td><span class="def-term">LoLo</span></td><td class="def-desc">Interlock out a device — e.g. if supply tank reaches LoLo, interlock out the supply pump.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 4.1 SAFETY -->
+    <div class="detail-panel" id="topic-safety">
+      <div class="d-section-tag"><div class="d-dot" style="background:#ff3b30"></div><span style="color:#ff3b30">Alarms &amp; Safety</span><span style="color:var(--text-dim)">&nbsp;·&nbsp;4.1</span></div>
+      <div class="d-title">Safety Behaviors</div>
+      <p class="prose">Expected machine behaviors for each safety event type, with recovery procedures. All machines should be recoverable from any safety event without manual repositioning wherever possible.</p>
+      <div class="table-wrap">
+        <table class="def-table">
+          <thead><tr><th style="width:190px">Action</th><th>Expected Response</th><th>Recovery</th></tr></thead>
+          <tbody>
+            <tr><td><span class="def-term">Machine E-STOP</span></td><td class="def-desc">Machine commands an abort. All devices go to safe state.</td><td class="def-desc">Reset safety device. Home the machine or Start the module.</td></tr>
+            <tr><td><span class="def-term">Momentary Request to Enter</span></td><td class="def-desc">Machine completes its current process or immediately pauses all devices. Programmer must think through all scenarios.</td><td class="def-desc">Satisfy all safeties and press Proceed. Machine continues from previous state and operation.</td></tr>
+            <tr><td><span class="def-term">Request to Enter (Override)</span></td><td class="def-desc">Immediate Pause. Operates as expected response for protected or monitored space.</td><td class="def-desc">Satisfy all safeties and press Proceed.</td></tr>
+            <tr><td><span class="def-term">Protected Space Detection</span></td><td class="def-desc">Any energized device in the protected space is de-energized (may be entire machine). Devices commanded to safe states.</td><td class="def-desc">Satisfy all safeties and press Proceed.</td></tr>
+            <tr><td><span class="def-term">Monitored Space Detection</span></td><td class="def-desc">Energized devices in monitored space must be de-energized. Devices outside must not enter without safe positioning or a protected space safety detection to continue.</td><td class="def-desc">If devices in monitored space: satisfy safeties, Proceed. If not: devices can resume at full speed after safety reset.</td></tr>
+            <tr><td><span class="def-term">Zone Migration (Monitored → Protected)</span></td><td class="def-desc">Energized device in protected space is de-energized. Machine commands devices to safe states.</td><td class="def-desc">Satisfy all safeties and press Proceed.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 5.0 HMI COLORS -->
+    <div class="detail-panel" id="topic-hmi-colors">
+      <div class="d-section-tag"><div class="d-dot" style="background:#ff9500"></div><span style="color:#ff9500">HMI</span><span style="color:var(--text-dim)">&nbsp;·&nbsp;5.0</span></div>
+      <div class="d-title">HMI Color Standards</div>
+      <p class="prose">A consistent color language reduces operator training time and prevents misinterpretation of machine states. These standards apply to all operator-facing views built in Ignition SCADA.</p>
+      <div class="sec-label" style="margin-bottom:14px">Standard Palette</div>
+      <div class="swatch-grid">
+        <div class="swatch"><div class="sw-color" style="background:#00D900"></div><div class="sw-info"><div class="sw-name">Green</div><div class="sw-hex">#00D900</div><div class="sw-meaning">ON, OPEN, RUNNING, AUTO</div></div></div>
+        <div class="swatch"><div class="sw-color" style="background:#FF4747"></div><div class="sw-info"><div class="sw-name">Red</div><div class="sw-hex">#FF4747</div><div class="sw-meaning">FAULTED, undesirable state</div></div></div>
+        <div class="swatch"><div class="sw-color" style="background:#F4DE2A"></div><div class="sw-info"><div class="sw-name">Yellow</div><div class="sw-hex">#F4DE2A</div><div class="sw-meaning">WARNING</div></div></div>
+        <div class="swatch"><div class="sw-color" style="background:#AAAAAA"></div><div class="sw-info"><div class="sw-name">Gray</div><div class="sw-hex">#AAAAAA</div><div class="sw-meaning">OFF, CLOSED, NOT RUNNING</div></div></div>
+        <div class="swatch"><div class="sw-color" style="background:#7DFAFF;border-top:1px solid #e8e8ed;"></div><div class="sw-info"><div class="sw-name">Electric Blue</div><div class="sw-hex">#7DFAFF</div><div class="sw-meaning">MANUAL MODE</div></div></div>
+        <div class="swatch"><div class="sw-color" style="background:#0C7BB3"></div><div class="sw-info"><div class="sw-name">Blue</div><div class="sw-hex">#0C7BB3</div><div class="sw-meaning">Direct machine control button</div></div></div>
+        <div class="swatch"><div class="sw-color" style="background:#FAFAFA;border-top:1px solid #e8e8ed;"></div><div class="sw-info"><div class="sw-name">Light Gray</div><div class="sw-hex">#FAFAFA</div><div class="sw-meaning">General background</div></div></div>
+        <div class="swatch"><div class="sw-color" style="background:#FFFFFF;border-top:1px solid #e8e8ed;"></div><div class="sw-info"><div class="sw-name">White</div><div class="sw-hex">#FFFFFF</div><div class="sw-meaning">Machine Embedded View</div></div></div>
+      </div>
+      <div class="sec-label">Typography &amp; Component Standards</div>
+      <div class="table-wrap">
+        <table class="def-table">
+          <tbody>
+            <tr><td><span class="def-term">Font</span></td><td class="def-desc">Century Gothic, Size 14. All text must be readable when the program launches on the client session.</td></tr>
+            <tr><td><span class="def-term">Buttons</span></td><td class="def-desc">Direct machine control = Blue (#0C7BB3) background. Other buttons = White. Must clearly indicate enabled/disabled state.</td></tr>
+            <tr><td><span class="def-term">Process Values</span></td><td class="def-desc">Background matches screen color. Black border. Units included as a suffix.</td></tr>
+            <tr><td><span class="def-term">Setpoints</span></td><td class="def-desc">White background when editable; screen color when not. Black border, units as suffix.</td></tr>
+            <tr><td><span class="def-term">Labels</span></td><td class="def-desc">Dark machine view labels use a white lozenge background. Crowded labels: remove from view but retain as mouseover text.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 5.1 HMI LAYOUT -->
+    <div class="detail-panel" id="topic-hmi-layout">
+      <div class="d-section-tag"><div class="d-dot" style="background:#ff9500"></div><span style="color:#ff9500">HMI</span><span style="color:var(--text-dim)">&nbsp;·&nbsp;5.1</span></div>
+      <div class="d-title">Layout &amp; Required Features</div>
+      <p class="prose">A common machine UI design reduces training time across operators, maintenance technicians, and engineers. The following structural elements are required for all production equipment deployments.</p>
+      <div class="sec-label">Structural Elements</div>
+      <div class="table-wrap" style="margin-bottom:24px;">
+        <table class="def-table">
+          <thead><tr><th style="width:190px">Element</th><th>Specification</th></tr></thead>
+          <tbody>
+            <tr><td><span class="def-term">Primary Header</span></td><td class="def-desc">General navigation and user information. Docked at the bottom of the screen.</td></tr>
+            <tr><td><span class="def-term">Secondary Header</span></td><td class="def-desc">Zone-specific control: Logo, Machine Name, State, Safety Status, Mode, Interlocks/Permissives, and control buttons (Home, Start, Abort, Reset). Docked at the top.</td></tr>
+            <tr><td><span class="def-term">Navigation Bar</span></td><td class="def-desc">Docked on the left-hand side.</td></tr>
+            <tr><td><span class="def-term">Device Control Panel</span></td><td class="def-desc">Docked on the right side. Opens as a sidebar when clicking a device on the Machine View. Dimensions: 250 (W) × 870 (H).</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="sec-label">Required Tabs</div>
+      <div class="alarm-stack" style="margin-bottom:24px;">
+        <div class="alarm-card"><div class="alarm-dot" style="background:#0071e3"></div><div class="alarm-body"><div class="alarm-priority">Machine View / P&amp;ID Tab</div><div class="alarm-title">Discrete: Machine View · Continuous: P&amp;ID</div><div class="alarm-desc">All sensors and devices clearly visible. Faulted devices turn Red. Selecting a device opens the control sidebar, indicated by a blue border. Sequencer: current sequence step must be visible; sensors highlighted if a step is hanging waiting for a specific value.</div></div></div>
+        <div class="alarm-card"><div class="alarm-dot" style="background:#5856d6"></div><div class="alarm-body"><div class="alarm-priority">Commission Tab · Password Protected</div><div class="alarm-title">Commissioning &amp; maintenance features</div><div class="alarm-desc">All features needed for commissioning or maintenance but not continuous operations. Editing offsets, calibrating, controlling via sequences not triggered by upper-level software.</div></div></div>
+        <div class="alarm-card"><div class="alarm-dot" style="background:#ff3b30"></div><div class="alarm-body"><div class="alarm-priority">Safety Tab</div><div class="alarm-title">Safety zone overview + Request to Enter</div><div class="alarm-desc">View of all safety devices in a safety zone. Contains Request to Enter functionality that brings equipment to a controlled stop in an auto-recoverable state.</div></div></div>
+        <div class="alarm-card"><div class="alarm-dot" style="background:#ff9500"></div><div class="alarm-body"><div class="alarm-priority">Alarms Tab</div><div class="alarm-title">Active Alarms + Alarm History</div><div class="alarm-desc">Alarm summary sorted by priority. Alarm history tied to a database. Two sub-tabs: Active Alarms and Alarm History.</div></div></div>
+      </div>
+      <div class="sec-label">Device Faceplate Rules</div>
+      <div class="table-wrap">
+        <table class="def-table">
+          <tbody>
+            <tr><td><span class="def-term">Auto / Manual Toggle</span></td><td class="def-desc">All device interfaces must allow toggling between Manual and Auto while the parent is in Auto. Manual override on a child is time-limited and configurable by access level.</td></tr>
+            <tr><td><span class="def-term">Commands Available</span></td><td class="def-desc">Only Operator Commands (ocmd) available from the UI. Program Commands (pcmd) are not exposed to operators.</td></tr>
+            <tr><td><span class="def-term">Trends</span></td><td class="def-desc">Include historical trends wherever room allows. Prioritize process equipment and sensors for operational context.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 5.2 NAMING -->
+    <div class="detail-panel" id="topic-naming">
+      <div class="d-section-tag"><div class="d-dot" style="background:#ff9500"></div><span style="color:#ff9500">HMI</span><span style="color:var(--text-dim)">&nbsp;·&nbsp;5.2</span></div>
+      <div class="d-title">Naming Conventions</div>
+      <p class="prose">Naming conventions drive consistency across PLC code, HMI labels, permissive/interlock descriptions, and physical device labels. Physical tags in the field should match these conventions so commissioning and maintenance teams can locate devices without ambiguity.</p>
+      <div class="sec-label">Human Readable Description Convention</div>
+      <div class="table-wrap" style="margin-bottom:24px;">
+        <table class="def-table">
+          <tbody>
+            <tr><td><span class="def-term">Format</span></td><td class="def-desc"><span class="mono-tag">[TYPE_ABBREV]_[DeviceDescription]_[ActionOrSensorType]</span></td></tr>
+            <tr><td><span class="def-term">Digital Input Example</span></td><td class="def-desc"><span class="mono-tag">DI_PusherReturn_PRX</span> — proximity sensor on a pusher actuator return position</td></tr>
+            <tr><td><span class="def-term">VFD Example</span></td><td class="def-desc"><span class="mono-tag">VFD_InfeedConveyor</span> — variable frequency drive for an infeed conveyor</td></tr>
+            <tr><td><span class="def-term">HMI Labels Only</span></td><td class="def-desc">Use only the device description — not the full tag. A tower stop sensor displays as <span class="mono-tag">Stop Sensor</span>, not <span class="mono-tag">DI_StopSensor_PRX</span>.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="sec-label">Equipment Tagging</div>
+      <p class="prose" style="margin-bottom:18px;">Equipment tags use the full human-readable name of the equipment. These are capital-purchased systems with multiple devices, instruments, and components operating together.</p>
+      <div class="sec-label">Motor, Valve &amp; Instrumentation Tagging</div>
+      <div class="table-wrap">
+        <table class="def-table">
+          <tbody>
+            <tr><td><span class="def-term">P&amp;ID Exists</span></td><td class="def-desc">Device tagging on HMI overview and IO screens follows the existing P&amp;ID convention exactly.</td></tr>
+            <tr><td><span class="def-term">No P&amp;ID</span></td><td class="def-desc">HMI overview uses human-readable formats. IO screen uses human-readable and/or schematic reference descriptions.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- end content -->
+</div><!-- end main -->
+
+<script>
+const machineStates = [
+  { id:'homing',     name:'Homing',     type:'acting', desc:'Puts the machine in a ready or known state. All alarms cleared, all devices recovered and put into a known state. Sub-states are machine-specific.', cmds:['Abort','Stop'] },
+  { id:'homed',      name:'Homed',      type:'wait',   desc:'Waiting for a Start command, or performing service routines to maintain steady state. No sequence is actively running.', cmds:['Start','Abort'] },
+  { id:'running',    name:'Running',    type:'acting', desc:'Actively producing or ready to produce product based on a selected recipe. Sub-states of Running are machine-specific.', cmds:['Pause','Abort','Stop'] },
+  { id:'runout',     name:'Run Out',    type:'acting', desc:'Continues running product based on a selected recipe, but no more product will be run. Intended to put the machine into service mode.', cmds:['Abort'] },
+  { id:'stopped',    name:'Stopped',    type:'wait',   desc:'Completion of the Run Out sequence. Waiting for operators to Home the machine or for service to be performed.', cmds:['Home','Abort'] },
+  { id:'aborting',   name:'Aborting',   type:'acting', desc:'Immediate hard stop of the machine and all components. Triggered by E-STOP or critical interlock drop.', cmds:[] },
+  { id:'aborted',    name:'Aborted',    type:'wait',   desc:'Safe state is NOT guaranteed and product may not be good. A homing routine is required to return to a known state. Design the homing routine to respond appropriately in all scenarios.', cmds:['Home'] },
+  { id:'pausing',    name:'Pausing',    type:'acting', desc:'Interrupts the active sequence and commands the equipment to a safe state to be serviced.', cmds:[] },
+  { id:'paused',     name:'Paused',     type:'wait',   desc:'Machine is in a safe state to be serviced. Manual mode is active.', cmds:['Proceed','Abort'] },
+  { id:'proceeding', name:'Proceeding', type:'acting', desc:'Machine attempts to re-enter the active sequence where it left off when the pause was initiated. May require manual intervention depending on the particular sequence step.', cmds:[] },
+];
+
+const moduleStates = [
+  { id:'starting', name:'Starting', type:'acting', desc:'Puts the module in a known state, then transitions directly into Started. Should not involve a complex sequence, but may enforce valve positions or device states. All alarms cleared.', cmds:['Abort'] },
+  { id:'started',  name:'Started',  type:'acting', desc:'Actively producing or ready to produce based on a selected recipe. Sub-states of Started are machine-specific.', cmds:['Stop','Abort'] },
+  { id:'stopping', name:'Stopping', type:'acting', desc:'Immediate stop of the module and its components.', cmds:[] },
+  { id:'mstopped', name:'Stopped',  type:'wait',   desc:'Safe state is NOT guaranteed and product may not be good. The only automated recovery path is to Start the module again. Otherwise, a Reset command may be issued.', cmds:['Start'] },
+];
+
+function buildGrid(states, gridId, detailId) {
+  const grid = document.getElementById(gridId);
+  states.forEach(s => {
+    const node = document.createElement('div');
+    node.className = `state-node ${s.type}`;
+    node.id = `${gridId}-${s.id}`;
+    node.innerHTML = `<div class="sn-name">${s.name}</div><div class="sn-type">${s.type === 'acting' ? 'Acting' : 'Wait'}</div>`;
+    node.onclick = () => selectState(s, gridId, detailId);
+    grid.appendChild(node);
+  });
+}
+
+function selectState(s, gridId, detailId) {
+  document.querySelectorAll(`#${gridId} .state-node`).forEach(n => n.classList.remove('sel'));
+  document.getElementById(`${gridId}-${s.id}`).classList.add('sel');
+  const box = document.getElementById(detailId);
+  const cmdsHTML = s.cmds.length
+    ? s.cmds.map(c => `<span class="cmd-tag">${c}</span>`).join('')
+    : `<span style="color:var(--text-dim);font-size:12px">No manual commands available in this state — transitions occur automatically or via interrupt.</span>`;
+  box.innerHTML = `<div class="sd-title">${s.name} — ${s.type === 'acting' ? 'Acting State' : 'Wait State'}</div><div>${s.desc}</div><div class="cmd-row">${cmdsHTML}</div>`;
+  box.classList.add('show');
+}
+
+buildGrid(machineStates, 'mm-grid', 'mm-detail');
+buildGrid(moduleStates, 'mod-grid', 'mod-detail');
+
+// Navigation
+let currentFilter = 'all';
+
+function showTopic(id) {
+  document.getElementById('welcome').style.display = 'none';
+  document.querySelectorAll('.detail-panel').forEach(p => p.classList.remove('visible'));
+  const panel = document.getElementById('topic-' + id);
+  if (panel) panel.classList.add('visible');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.toggle('active', n.getAttribute('onclick') && n.getAttribute('onclick').includes(`'${id}'`));
+  });
+  document.getElementById('content').scrollTop = 0;
+}
+
+function filterSection(section, btn) {
+  currentFilter = section;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters(section, document.getElementById('search-input').value.toLowerCase());
+}
+
+function searchTopics(val) { applyFilters(currentFilter, val.toLowerCase()); }
+
+function applyFilters(section, search) {
+  const groups = ['architecture','states','devices','alarms','hmi'];
+  const counts = {};
+  groups.forEach(g => counts[g] = 0);
+  document.querySelectorAll('.nav-item').forEach(item => {
+    const s = item.getAttribute('data-section');
+    const title = item.getAttribute('data-title') || '';
+    const show = (section === 'all' || s === section) && (!search || title.includes(search));
+    item.classList.toggle('hidden', !show);
+    if (show && counts[s] !== undefined) counts[s]++;
+  });
+  groups.forEach(g => {
+    const groupEl = document.getElementById('group-' + g);
+    const visible = section === 'all' || g === section;
+    if (groupEl) groupEl.style.display = visible ? 'block' : 'none';
+    const noRes = document.getElementById('no-' + g);
+    if (noRes) noRes.style.display = (visible && counts[g] === 0) ? 'block' : 'none';
+  });
+}
+
+function toggleGroup(id) { document.getElementById(id).classList.toggle('collapsed'); }
+</script>
+</body>
+</html>
