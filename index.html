@@ -68,16 +68,19 @@
   .nav-tag { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); display: block; margin-bottom: 1px; }
   .no-results { padding: 10px 16px 10px 28px; font-size: 12px; color: var(--text-dim); display: none; }
 
-  .welcome { padding: 60px 48px; max-width: 700px; }
+  .welcome { padding: 52px 48px 40px; display: block; }
   .welcome-pre { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 14px; }
-  .welcome-title { font-size: 36px; font-weight: 600; color: var(--text-bright); line-height: 1.15; margin-bottom: 14px; letter-spacing: -0.025em; }
-  .welcome-sub { font-size: 15px; color: var(--text-mid); max-width: 480px; line-height: 1.65; margin-bottom: 20px; font-weight: 300; }
-  .welcome-note { display: flex; align-items: flex-start; gap: 8px; max-width: 480px; background: rgba(0,0,0,0.03); border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 13px; color: var(--text-mid); line-height: 1.6; font-weight: 300; margin-bottom: 32px; }
-  .topic-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 560px; }
-  .topic-card { background: var(--surface); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 18px; cursor: pointer; transition: all 0.2s ease; box-shadow: var(--shadow-sm); }
+  .welcome-title { font-size: 36px; font-weight: 600; color: var(--text-bright); line-height: 1.15; margin-bottom: 24px; letter-spacing: -0.025em; }
+  .welcome-body { margin-bottom: 20px; }
+  .welcome-body p { font-size: 15px; color: var(--text-mid); line-height: 1.7; font-weight: 300; margin-bottom: 14px; }
+  .welcome-body p:last-child { margin-bottom: 0; }
+  .welcome-note { display: flex; align-items: flex-start; gap: 8px; max-width: 560px; background: rgba(0,0,0,0.03); border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 13px; color: var(--text-mid); line-height: 1.6; font-weight: 300; margin-bottom: 28px; }
+  .topic-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-width: 720px; }
+  .topic-card { background: var(--surface); border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 12px 16px; cursor: pointer; transition: all 0.2s ease; box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 12px; }
   .topic-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
-  .tc-icon { width: 30px; height: 30px; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
-  .tc-name { font-size: 13px; font-weight: 600; color: var(--text-bright); margin-bottom: 2px; }
+  .tc-icon { width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  .tc-text { display: flex; align-items: baseline; gap: 6px; }
+  .tc-name { font-size: 13px; font-weight: 600; color: var(--text-bright); }
   .tc-sub { font-size: 12px; color: var(--text-dim); }
 
   .detail-panel { display: none; padding: 40px 48px; max-width: 800px; animation: fadeIn 0.2s ease; }
@@ -240,36 +243,40 @@
     <!-- WELCOME -->
     <div class="welcome" id="welcome">
       <div class="welcome-pre">Controls Engineering Standard · Rev 1.0</div>
-      <div class="welcome-title">Machine Programming<br>Methodology</div>
-      <div class="welcome-sub">A programming standard for controls architecture, state machine design, device management, alarm hierarchy, and HMI layout — built on S88 and PackML principles. Select any topic from the sidebar to explore.</div>
+      <div class="welcome-title">Machine Programming Methodology</div>
+      <div class="welcome-body">
+        <p>This is a programming standard for controls architecture built on <strong>S88</strong> and <strong>PackML</strong> principles, covering the full stack from system design through HMI deployment: architecture and design hierarchy, state machine design (Machine Manager and Module Manager), device management via Control Modules, alarm classification, and operator interface standards.</p>
+        <p>It defines a consistent methodology for Beckhoff TwinCAT3 and Ignition SCADA deployments, with patterns that are adaptable across any IEC 61131-3 platform.</p>
+        <p>Select any topic from the sidebar to explore the standard in detail, or use the cards below as a starting point.</p>
+      </div>
       <div class="welcome-note">
         <span style="color:var(--text-dim);flex-shrink:0;margin-top:1px">ℹ︎</span>
-        Developed and implemented at Heirloom Carbon Technologies. Defines architecture for Beckhoff TwinCAT3 and Ignition SCADA deployments; adaptable across IEC 61131-3 platforms.
+        Developed and implemented at Heirloom Carbon Technologies as the first controls hire pre-Series A. This standard was authored to establish repeatable, scalable machine programming practices across the team.
       </div>
       <div class="topic-cards">
         <div class="topic-card" onclick="showTopic('machine-manager')">
           <div class="tc-icon" style="background:rgba(88,86,214,0.1)">🔄</div>
-          <div class="tc-name">State Machine</div><div class="tc-sub">Interactive explorer</div>
+          <div class="tc-text"><span class="tc-name">State Machine</span><span class="tc-sub">Interactive 10-state explorer</span></div>
         </div>
         <div class="topic-card" onclick="showTopic('definitions')">
           <div class="tc-icon" style="background:rgba(0,113,227,0.1)">📖</div>
-          <div class="tc-name">Definitions</div><div class="tc-sub">12 standard terms</div>
+          <div class="tc-text"><span class="tc-name">Standard Definitions</span><span class="tc-sub">12 standard terms</span></div>
+        </div>
+        <div class="topic-card" onclick="showTopic('hierarchy')">
+          <div class="tc-icon" style="background:rgba(0,113,227,0.08)">🏗</div>
+          <div class="tc-text"><span class="tc-name">Design Hierarchy</span><span class="tc-sub">Physical &amp; procedural model</span></div>
         </div>
         <div class="topic-card" onclick="showTopic('alarms')">
           <div class="tc-icon" style="background:rgba(255,59,48,0.1)">🚨</div>
-          <div class="tc-name">Alarm Hierarchy</div><div class="tc-sub">4 priority levels</div>
+          <div class="tc-text"><span class="tc-name">Alarm Hierarchy</span><span class="tc-sub">4 priority levels</span></div>
         </div>
         <div class="topic-card" onclick="showTopic('hmi-colors')">
           <div class="tc-icon" style="background:rgba(255,149,0,0.1)">🎨</div>
-          <div class="tc-name">HMI Colors</div><div class="tc-sub">7 standard colors</div>
+          <div class="tc-text"><span class="tc-name">HMI Color Standards</span><span class="tc-sub">7 standard colors</span></div>
         </div>
         <div class="topic-card" onclick="showTopic('permissives')">
           <div class="tc-icon" style="background:rgba(48,184,101,0.1)">🔒</div>
-          <div class="tc-name">Permissives</div><div class="tc-sub">&amp; Interlocks</div>
-        </div>
-        <div class="topic-card" onclick="showTopic('errors')">
-          <div class="tc-icon" style="background:rgba(255,59,48,0.08)">⚠︎</div>
-          <div class="tc-name">Fault Types</div><div class="tc-sub">Recovery framework</div>
+          <div class="tc-text"><span class="tc-name">Permissives &amp; Interlocks</span><span class="tc-sub">Prevention vs. interruption</span></div>
         </div>
       </div>
     </div>
