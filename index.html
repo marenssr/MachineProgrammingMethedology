@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Machine Programming Methodology — Controls Engineering Standard</title>
+<title>Machine Programming Methodology</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -245,13 +245,13 @@
       <div class="welcome-pre">Controls Engineering Standard · Rev 1.0</div>
       <div class="welcome-title">Machine Programming Methodology</div>
       <div class="welcome-body">
-        <p>This is a programming standard for controls architecture built on <strong>S88</strong> and <strong>PackML</strong> principles, covering the full stack from system design through HMI deployment: architecture and design hierarchy, state machine design (Machine Manager and Module Manager), device management via Control Modules, alarm classification, and operator interface standards.</p>
+        <p>This is a programming standard for controls architecture built on <strong>ISA-88</strong> and <strong>PackML</strong> principles, covering the full stack from system design through HMI deployment: architecture and design hierarchy, state machine design (Machine Manager and Module Manager), device management via Control Modules, alarm classification, and operator interface standards.</p>
         <p>It defines a consistent methodology for Beckhoff TwinCAT3 and Ignition SCADA deployments, with patterns that are adaptable across any IEC 61131-3 platform.</p>
         <p>Select any topic from the sidebar to explore the standard in detail, or use the cards below as a starting point.</p>
       </div>
       <div class="welcome-note">
         <span style="color:var(--text-dim);flex-shrink:0;margin-top:1px">ℹ︎</span>
-        Developed and implemented at Heirloom Carbon Technologies as the first controls hire pre-Series A. This standard was authored to establish repeatable, scalable machine programming practices across the team.
+        This is an active document, overall purpose is to establish repeatable, scalable machine programming practices
       </div>
       <div class="topic-cards">
         <div class="topic-card" onclick="showTopic('machine-manager')">
@@ -285,15 +285,15 @@
     <div class="detail-panel" id="topic-system-overview">
       <div class="d-section-tag"><div class="d-dot" style="background:#0071e3"></div><span style="color:#0071e3">Architecture</span><span style="color:var(--text-dim)">&nbsp;·&nbsp;1.0</span></div>
       <div class="d-title">System Overview</div>
-      <p class="prose">This standard implements a <strong>multi-level architecture</strong> across the total automation system. Each level has a defined purpose and is not necessarily dependent on the others. The core focus is automated machines and their programming architecture.</p>
+      <p class="prose">This standard implements a <strong>multi level architecture</strong> across a total automation system. Each level has a defined purpose and is not necessarily dependent on the others. The core focus is automated machines and their programming architecture.</p>
       <div class="sec-label">System Levels</div>
       <div class="table-wrap">
         <table class="def-table">
           <thead><tr><th>System</th><th>Description</th></tr></thead>
           <tbody>
-            <tr><td><span class="def-term">Operating System (Software)</span></td><td class="def-desc">Overall brains of the processes. Key business decisions, process setpoints, traceability, and condition monitoring. Strings together operations via sequence requests but does not directly control machines.</td></tr>
-            <tr><td><span class="def-term">HMI — Ignition SCADA</span></td><td class="def-desc">Responsible for direct control of machines and circumvention of upper-level software when needed. Used for operator interfaces during commissioning and maintenance, visual SCADA overviews, and variable historization to a SQL database.</td></tr>
-            <tr><td><span class="def-term">Machine (PLC)</span></td><td class="def-desc">A combination of electrical, mechanical, and programming components that allow processes to run. Machines can be Discrete, Continuous, or Batch. This document defines how to design the programming component.</td></tr>
+            <tr><td><span class="def-term">Operating System (Software)</span></td><td class="def-desc">Overall brains of the processes. Key business decisions, process setpoints, traceability, and condition monitoring. Strings together operations via sequence requests but does not directly control machines, machine control is left to the PLC.</td></tr>
+            <tr><td><span class="def-term">HMI: Ignition SCADA</span></td><td class="def-desc">Responsible for direct control of machines and circumvention of upper level software when needed. Used for operator interfaces during commissioning and maintenance, visual SCADA overviews, and variable historization to a SQL database.</td></tr>
+            <tr><td><span class="def-term">Machine (PLC)</span></td><td class="def-desc">A combination of electrical, mechanical, and programming components that allow processes to run. Machines can be Discrete, Continuous, or Batch. This guide defines how to design the programming component.</td></tr>
           </tbody>
         </table>
       </div>
@@ -304,7 +304,7 @@
       <div class="d-section-tag"><div class="d-dot" style="background:#0071e3"></div><span style="color:#0071e3">Architecture</span><span style="color:var(--text-dim)">&nbsp;·&nbsp;1.1</span></div>
       <div class="d-title">Design Hierarchy</div>
       <p class="prose">The design hierarchy is drawn from two models: a <strong>Physical Model</strong> (physical processing and control equipment grouped by purpose) and a <strong>Procedural Model</strong> (operations that execute controlled actions in ordered sequences).</p>
-      <div class="sec-label" style="margin-bottom:16px">Physical Model — Equipment Hierarchy</div>
+      <div class="sec-label" style="margin-bottom:16px">Physical Model: Equipment Hierarchy</div>
       <div style="background:var(--surface);border:1px solid var(--border-light);border-radius:var(--radius);padding:24px;margin-bottom:24px;box-shadow:var(--shadow-sm);">
         <div style="display:flex;flex-direction:column;align-items:flex-start;">
           <div style="background:rgba(0,113,227,0.08);border:1.5px solid rgba(0,113,227,0.3);border-radius:10px;padding:10px 20px;font-size:13px;font-weight:600;color:#0071e3;">Machine Manager (FB_Machine)</div>
@@ -331,9 +331,9 @@
       <div class="table-wrap">
         <table class="def-table">
           <tbody>
-            <tr><td><span class="def-term">Parent → Child Commands</span></td><td class="def-desc">A "parent" is always a Machine or Module instance. A "child" can be either a Module or Device. Commands routed through the parent drive procedural actions of its children.</td></tr>
-            <tr><td><span class="def-term">Equipment Class</span></td><td class="def-desc">Equipment can operate as a Parent and drive actions through sequential or conditional logic. Machine-specific, but extends the library FB_Machine or FB_Module base class.</td></tr>
-            <tr><td><span class="def-term">Device Class</span></td><td class="def-desc">Devices are child components with pre-programmed actions common across machines. On abort or stop, devices are commanded to a safe state by their parent.</td></tr>
+            <tr><td><span class="def-term">Parent (master) → Child (slave) Commands</span></td><td class="def-desc">A "parent" is always a Machine or Module instance. A "child" can be either a Module or Device. Commands routed through the parent drive procedural actions of its children.</td></tr>
+            <tr><td><span class="def-term">Equipment Class</span></td><td class="def-desc">Equipment can operate as a Parent and drive actions through sequential or conditional logic. Machine specific, but extends the library FB_Machine or FB_Module base class.</td></tr>
+            <tr><td><span class="def-term">Device Class</span></td><td class="def-desc">Devices are child components with pre programmed actions common across machines. On abort or stop, devices are commanded to a safe state by their parent.</td></tr>
           </tbody>
         </table>
       </div>
@@ -348,11 +348,11 @@
         <table class="def-table">
           <thead><tr><th style="width:170px">Term</th><th>Description</th></tr></thead>
           <tbody>
-            <tr><td><span class="def-term">Machine</span></td><td class="def-desc">An entire production machine based on a <strong>10-state model</strong> including pausing and homing. Every machine extends FB_Machine. Use when a complex homing sequence is required to return to a known good state.</td></tr>
-            <tr><td><span class="def-term">Module</span></td><td class="def-desc">A simpler production machine based on a <strong>4-state model</strong>. Extends FB_Module. Distinguishable because the Home option is not available.</td></tr>
+            <tr><td><span class="def-term">Machine</span></td><td class="def-desc">An entire production machine based on a <strong>10 state model</strong> including pausing and homing. Every machine extends FB_Machine. Use when a complex homing sequence is required to return to a known good state.</td></tr>
+            <tr><td><span class="def-term">Module</span></td><td class="def-desc">A simpler production machine based on a <strong>4 state model</strong>. Extends FB_Module. Distinguishable because the Home option is not available.</td></tr>
             <tr><td><span class="def-term">Sequence</span></td><td class="def-desc">An ordered list of executable device actions. Only used in automatic mode of machines or modules.</td></tr>
-            <tr><td><span class="def-term">Operation</span></td><td class="def-desc">A combination of multiple sequences achieving an overarching objective (e.g. Pick + Place = tray transfer). Typically defined by upper-level SCADA, or on the machine itself.</td></tr>
-            <tr><td><span class="def-term">Control Module (CM)</span></td><td class="def-desc">A device or combination of devices operated as a single action. The lowest level that carries out basic functions — valves, clamps, motors. Core code lives here and is transferable machine-to-machine without changes.</td></tr>
+            <tr><td><span class="def-term">Operation</span></td><td class="def-desc">A combination of multiple sequences achieving an overarching objective. Typically defined by upperl evel SCADA, or on the machine itself.</td></tr>
+            <tr><td><span class="def-term">Control Module (CM)</span></td><td class="def-desc">A device or combination of devices operated as a single action. The lowest level that carries out basic functions (valves, clamps, motors). Core code lives here and is transferable machine to machine without changes.</td></tr>
             <tr><td><span class="def-term">Function</span></td><td class="def-desc">Interfaces between sequences and control modules. Calls specific device actions and waits for a response before advancing. Only one function per machine may be active at a time.</td></tr>
             <tr><td><span class="def-term">Conditional Command</span></td><td class="def-desc">Any programmed device actuation done outside of a sequence, based on specific conditions. Used in auto mode only. Does not depend on machine history.</td></tr>
             <tr><td><span class="def-term">Machine State</span></td><td class="def-desc">A condition of the machine determined by previous inputs, which defines actions on following inputs. States determine whether the machine is in Auto or Manual mode.</td></tr>
@@ -375,18 +375,18 @@
       <div class="table-wrap" style="margin-bottom:24px;">
         <table class="def-table">
           <tbody>
-            <tr><td><span class="def-term">Permissives required</span></td><td class="def-desc">Each sequence must define permissives — all must be true before the sequence may start. Sequences do not have interlocks.</td></tr>
-            <tr><td><span class="def-term">Auto-execute in transient states</span></td><td class="def-desc">Certain sequences execute automatically in transient states (e.g. homing sequence in Homing state) if permissives are met. Execute only in Acting States by request otherwise.</td></tr>
-            <tr><td><span class="def-term">Auto mode only</span></td><td class="def-desc">Sequences execute only in states that correspond to automatic mode — all states except Paused, Stopped, and Aborted.</td></tr>
+            <tr><td><span class="def-term">Permissives required</span></td><td class="def-desc">Each sequence must define permissives and all must be true before the sequence may start. Sequences do not have interlocks.</td></tr>
+            <tr><td><span class="def-term">Auto execute in transient states</span></td><td class="def-desc">Certain sequences execute automatically in transient states if permissives are met. Execute only in Acting States by request otherwise.</td></tr>
+            <tr><td><span class="def-term">Auto mode only</span></td><td class="def-desc">Sequences execute only in states that correspond to automatic mode which are all states except Paused, Stopped, and Aborted.</td></tr>
           </tbody>
         </table>
       </div>
       <div class="sec-label">Sequencer Function Responsibilities</div>
       <div class="cards-grid">
-        <div class="info-card"><div class="ic-label">Command</div><div class="ic-title">Issue device actions</div><div class="ic-desc">Commands a control module, multiple modules, or executes branches. Can issue parallel commands; custom logic is performed external to the function.</div></div>
+        <div class="info-card"><div class="ic-label">Command</div><div class="ic-title">Issue device actions</div><div class="ic-desc">Commands a control module, multiple modules, or executes branches. Can issue parallel commands, custom logic is performed external to the function.</div></div>
         <div class="info-card"><div class="ic-label">Monitor</div><div class="ic-title">Track failures &amp; timeouts</div><div class="ic-desc">Monitors failures or timeouts of the active function and surfaces fault codes up the hierarchy.</div></div>
         <div class="info-card"><div class="ic-label">Advance</div><div class="ic-title">Set complete signal</div><div class="ic-desc">Sets a complete signal to advance to the next sequence index, or branch to a different location within the sequencer array.</div></div>
-        <div class="info-card"><div class="ic-label">Retry</div><div class="ic-title">Retry logic</div><div class="ic-desc">Attempts to fix the problem via external logic, or as simply as re-issuing the previous control module commands.</div></div>
+        <div class="info-card"><div class="ic-label">Retry</div><div class="ic-title">Retry logic</div><div class="ic-desc">Attempts to fix the problem via external logic, or as simply as reissuing the previous control module commands.</div></div>
       </div>
     </div>
 
@@ -396,7 +396,7 @@
       <div class="d-title">Machine Manager</div>
       <p class="prose">The Machine Manager transitions the machine between states (and modes). Based on a <strong>10-state model</strong> derived from PackML, reduced from 17 states. Click any state node to view its description and valid commands.</p>
       <div class="sm-wrap">
-        <div class="sm-label">MACHINE MANAGER STATE MACHINE — click a state to explore</div>
+        <div class="sm-label">MACHINE MANAGER STATE MACHINE (click a state to explore)</div>
         <div class="sm-grid-10" id="mm-grid"></div>
         <div class="state-detail-box" id="mm-detail"></div>
       </div>
@@ -405,17 +405,17 @@
         <div style="display:flex;align-items:center;gap:6px;"><div style="width:22px;height:14px;border:1.5px dashed var(--border);border-radius:4px;background:var(--bg);"></div>Wait State — stable, awaits command or interrupt</div>
       </div>
       <div class="sec-label">Entry / Exit Permissives</div>
-      <p class="prose">Each Acting State has entry and exit permissives. A state can only be entered if entry permissives are met; it exits by command or when State Complete permissives are met. Naming convention: <strong>PermHome</strong>, <strong>PermHomeComplete</strong>.</p>
-      <p class="prose">Interrupts such as E-STOP or safety breach cause state transitions before a complete signal is received — e.g. an E-STOP while Running transitions immediately to Aborting.</p>
+      <p class="prose">Each Acting State has entry and exit permissives. A state can only be entered if entry permissives are met, it exits by command or when State Complete permissives are met. Naming convention: <strong>PermHome</strong>, <strong>PermHomeComplete</strong>.</p>
+      <p class="prose">Interrupts such as E-STOP or safety breach cause state transitions before a complete signal is received, for example an E-STOP while Running transitions immediately to Aborting.</p>
     </div>
 
     <!-- 2.1 MODULE MANAGER -->
     <div class="detail-panel" id="topic-module-manager">
       <div class="d-section-tag"><div class="d-dot" style="background:#5856d6"></div><span style="color:#5856d6">States</span><span style="color:var(--text-dim)">&nbsp;·&nbsp;2.1</span></div>
       <div class="d-title">Module Manager</div>
-      <p class="prose">The Module Manager functions like the Machine Manager in simplified form — a <strong>4-state model</strong>. Modules are distinguishable because the "Home" option is not available. Click any state to explore.</p>
+      <p class="prose">The Module Manager functions like the Machine Manager in simplified form — a <strong>4 state model</strong>. Modules are distinguishable because the "Home" option is not available. Click any state to explore.</p>
       <div class="sm-wrap">
-        <div class="sm-label">MODULE MANAGER STATE MACHINE — click a state to explore</div>
+        <div class="sm-label">MODULE MANAGER STATE MACHINE (click a state to explore)</div>
         <div class="sm-grid-4" id="mod-grid"></div>
         <div class="state-detail-box" id="mod-detail"></div>
       </div>
@@ -423,7 +423,7 @@
       <div class="table-wrap">
         <table class="def-table">
           <tbody>
-            <tr><td><span class="def-term">No Homing</span></td><td class="def-desc">Modules have a Starting state that transitions directly into Started. No complex homing sequence — may only enforce valve positions or known device states.</td></tr>
+            <tr><td><span class="def-term">No Homing</span></td><td class="def-desc">Modules have a Starting state that transitions directly into Started. No complex homing sequence, may only enforce valve positions or known device states.</td></tr>
             <tr><td><span class="def-term">Stopping vs. Aborting</span></td><td class="def-desc">On E-STOP while in Started state, the module transitions to Stopping (not Aborting). Stopped does not guarantee a safe state.</td></tr>
             <tr><td><span class="def-term">Recovery</span></td><td class="def-desc">The only automated path to reset a known state is to Start the module again. A Reset command can also be issued by the operator.</td></tr>
           </tbody>
@@ -435,7 +435,7 @@
     <div class="detail-panel" id="topic-substates">
       <div class="d-section-tag"><div class="d-dot" style="background:#5856d6"></div><span style="color:#5856d6">States</span><span style="color:var(--text-dim)">&nbsp;·&nbsp;2.2</span></div>
       <div class="d-title">Substates &amp; Modes</div>
-      <p class="prose">Substates are custom-defined states inside Running or Starting that provide more granularity than the standard state machine. Each substate may or may not run a sequence within it.</p>
+      <p class="prose">Substates are custom defined states inside Running or Starting that provide more granularity than the standard state machine. Each substate may or may not run a sequence within it.</p>
       <div class="sec-label">Substate Types</div>
       <div class="cards-grid" style="margin-bottom:24px;">
         <div class="info-card"><div class="ic-label">Transient Substates</div><div class="ic-title">Typically run sequences</div><div class="ic-desc">Execute sequences within them and move to another state upon completion. Do not linger awaiting a command.</div></div>
@@ -449,7 +449,7 @@
           <tbody>
             <tr><td><span class="def-term">Auto Mode</span></td><td class="def-desc">Executes sequences issued by SCADA, the HMI, or conditional logic. Active in Running, Homing, and other acting states.</td></tr>
             <tr><td><span class="def-term">Manual Mode</span></td><td class="def-desc">Allows the operator to manipulate devices independently through the HMI. Active in Paused, Stopped, and Aborted states.</td></tr>
-            <tr><td><span class="def-term">Manual Override</span></td><td class="def-desc">A child component can temporarily overwrite the parent mode. Override is available in both modes but is only useful in Auto. Must be time-limited at a configurable access level.</td></tr>
+            <tr><td><span class="def-term">Manual Override</span></td><td class="def-desc">A child component can temporarily overwrite the parent mode. Override is available in both modes but is only useful in Auto. Must be time limited at a configurable access level.</td></tr>
           </tbody>
         </table>
       </div>
@@ -459,7 +459,7 @@
     <div class="detail-panel" id="topic-control-modules">
       <div class="d-section-tag"><div class="d-dot" style="background:#30b865"></div><span style="color:#30b865">Devices</span><span style="color:var(--text-dim)">&nbsp;·&nbsp;3.0</span></div>
       <div class="d-title">Control Modules</div>
-      <p class="prose">Control Modules are encapsulated code — an AOI in Ladder Logic or a Function Block in Structured Text — that directly controls a single device. Designed to be validated independently and transferred machine-to-machine without core code changes.</p>
+      <p class="prose">Control Modules are encapsulated code (like an AOI in Ladder Logic or a Function Block in Structured Text) that directly controls a single device. Designed to be validated independently and transferred machine to machine without core code changes.</p>
       <div class="sec-label">Required CM Properties</div>
       <div class="table-wrap">
         <table class="def-table">
@@ -468,10 +468,10 @@
             <tr><td><span class="def-term">Interlocks</span></td><td class="def-desc">Stop an action currently being executed. Default to TRUE if not applicable.</td></tr>
             <tr><td><span class="def-term">Command Inputs</span></td><td class="def-desc">Separate inputs for Program Commands (pcmd), Operator Commands (ocmd), and Control Commands (ccmd).</td></tr>
             <tr><td><span class="def-term">Command Unlatching</span></td><td class="def-desc">Commands must be unlatched during the processing of actions to prevent repeat triggering.</td></tr>
-            <tr><td><span class="def-term">Fault Flag</span></td><td class="def-desc">An error sets the module's 'faulted' flag, which is a logical OR of all active errors. Built-in monitoring required.</td></tr>
-            <tr><td><span class="def-term">Statistics / Metrics</span></td><td class="def-desc">Design-in when applicable: uptime vs. downtime, actuator transit time, cycle count.</td></tr>
+            <tr><td><span class="def-term">Fault Flag</span></td><td class="def-desc">An error sets the module's 'faulted' flag, which is a logical OR of all active errors. Built in monitoring required.</td></tr>
+            <tr><td><span class="def-term">Statistics / Metrics</span></td><td class="def-desc">Design in when applicable: uptime vs. downtime, actuator transit time, cycle count.</td></tr>
             <tr><td><span class="def-term">Status Bits</span></td><td class="def-desc">Readable by outside programs for monitoring and diagnostics.</td></tr>
-            <tr><td><span class="def-term">Reset Command (ccmd)</span></td><td class="def-desc">Clears internal tags, status bits, and input — but not configuration.</td></tr>
+            <tr><td><span class="def-term">Reset Command (ccmd)</span></td><td class="def-desc">Clears internal tags, status bits, and input, but not configuration.</td></tr>
           </tbody>
         </table>
       </div>
@@ -497,9 +497,9 @@
         <table class="def-table">
           <thead><tr><th style="width:80px">Scenario</th><th>Use Case</th></tr></thead>
           <tbody>
-            <tr><td><span class="def-term">1</span></td><td class="def-desc">Machine Manager in Auto — auto interlock drops (E-STOP, loss of air) → machine goes to manual. Immediately stops the active sequence.</td></tr>
-            <tr><td><span class="def-term">2</span></td><td class="def-desc">Prevent actuators from crashing during movement — position-based interlocks block motion if an adjacent device is in the path.</td></tr>
-            <tr><td><span class="def-term">3</span></td><td class="def-desc">Coordinated servo actions — stop movement if servos become decoupled or lose synchronization.</td></tr>
+            <tr><td><span class="def-term">1</span></td><td class="def-desc">Machine Manager in Auto, auto interlock drops (E-STOP, loss of air) → machine goes to manual. Immediately stops the active sequence.</td></tr>
+            <tr><td><span class="def-term">2</span></td><td class="def-desc">Prevent actuators from crashing during movement, position-based interlocks block motion if an adjacent device is in the path.</td></tr>
+            <tr><td><span class="def-term">3</span></td><td class="def-desc">Coordinated servo actions, stop movement if servos become decoupled or lose synchronization.</td></tr>
           </tbody>
         </table>
       </div>
@@ -509,7 +509,7 @@
     <div class="detail-panel" id="topic-errors">
       <div class="d-section-tag"><div class="d-dot" style="background:#30b865"></div><span style="color:#30b865">Devices</span><span style="color:var(--text-dim)">&nbsp;·&nbsp;3.2</span></div>
       <div class="d-title">Errors &amp; Recovery</div>
-      <p class="prose"><strong>Error</strong> is a superset that includes device faults (e.g. servo drive faults) and other conditions such as receiving an operator command in auto mode. Each error requires a defined recovery strategy.</p>
+      <p class="prose"><strong>Error</strong> is a superset that includes device faults and other conditions such as receiving an operator command in auto mode. Each error requires a defined recovery strategy.</p>
       <div class="sec-label">Fault Types</div>
       <div class="table-wrap" style="margin-bottom:24px;">
         <table class="def-table">
@@ -518,16 +518,16 @@
             <tr><td><span class="def-term">Device Fault</span></td><td class="def-desc">Sequencer Function Fault, Manager Fault</td><td class="def-desc">Device turns Red on HMI. Diagnostic event logged.</td><td class="def-desc">Reset Device or Reset its Parent Manager.</td></tr>
             <tr><td><span class="def-term">Sequencer Function Fault</span></td><td class="def-desc">Sequencer Fault</td><td class="def-desc">Generates a Sequencer Fault with fault code. Logged at sequence and manager level.</td><td class="def-desc">If salvageable: pause, address, then Proceed or Retry. Otherwise: Abort.</td></tr>
             <tr><td><span class="def-term">Sequencer Fault</span></td><td class="def-desc">Manager Fault</td><td class="def-desc">Fault code displayed to user and logged. Propagated up to Manager.</td><td class="def-desc">Operator Reset, or reset by next successful sequence call.</td></tr>
-            <tr><td><span class="def-term">Machine/Module Manager Fault</span></td><td class="def-desc">Top-level fault, may require software handling</td><td class="def-desc">Fault code displayed and logged for the equipment.</td><td class="def-desc">(1) Error condition disappears, (2) Software clears the error, or (3) Homing/Starting state.</td></tr>
+            <tr><td><span class="def-term">Machine/Module Manager Fault</span></td><td class="def-desc">Top level fault, may require software handling</td><td class="def-desc">Fault code displayed and logged for the equipment.</td><td class="def-desc">(1) Error condition disappears, (2) Software clears the error, or (3) Homing/Starting state.</td></tr>
           </tbody>
         </table>
       </div>
       <div class="sec-label">Recovery Strategy Framework</div>
       <div class="cards-grid">
-        <div class="info-card"><div class="ic-label">Auto-Recoverable (Machine)</div><div class="ic-title">Fully automated</div><div class="ic-desc">Machine detects and resolves the condition without operator intervention. Preferred when sensorization allows for it.</div></div>
-        <div class="info-card"><div class="ic-label">Auto-Recoverable (Software)</div><div class="ic-title">Software-initiated</div><div class="ic-desc">Higher-level software service detects the fault and issues the appropriate recovery command to the machine.</div></div>
+        <div class="info-card"><div class="ic-label">Auto Recoverable (Machine)</div><div class="ic-title">Fully automated</div><div class="ic-desc">Machine detects and resolves the condition without operator intervention. Preferred when sensorization allows for it.</div></div>
+        <div class="info-card"><div class="ic-label">Auto Recoverable (Software)</div><div class="ic-title">Software initiated</div><div class="ic-desc">Higher level software service detects the fault and issues the appropriate recovery command to the machine.</div></div>
         <div class="info-card"><div class="ic-label">Manual Recovery</div><div class="ic-title">Operator intervention</div><div class="ic-desc">Operator confirms machine state before recovery proceeds. Escalated via SCADA alarms to the correct individual.</div></div>
-        <div class="info-card"><div class="ic-label">Fault Propagation Rule</div><div class="ic-title">Inherit only if halting product</div><div class="ic-desc">Manager inherits child fault only if the fault causes it to halt product processing. Otherwise, lower-level fault is displayed on HMI but not passed up.</div></div>
+        <div class="info-card"><div class="ic-label">Fault Propagation Rule</div><div class="ic-title">Inherit only if halting product</div><div class="ic-desc">Manager inherits child fault only if the fault causes it to halt product processing. Otherwise, lower level fault is displayed on HMI but not passed up.</div></div>
       </div>
     </div>
 
@@ -539,7 +539,7 @@
       <div class="alarm-stack">
         <div class="alarm-card"><div class="alarm-dot" style="background:#ff3b30"></div><div class="alarm-body"><div class="alarm-priority">Critical Alarm · Highest Priority</div><div class="alarm-title">Safety device or critical function failure</div><div class="alarm-desc">Any critical safety device (E-STOP, safety mat, gate, light curtain) that causes machine stoppage, or critical functions such as Air and Power.</div></div></div>
         <div class="alarm-card"><div class="alarm-dot" style="background:#ff6b35"></div><div class="alarm-body"><div class="alarm-priority">Machine Fault · High Priority</div><div class="alarm-title">Event that has stopped the machine</div><div class="alarm-desc">Generally a sequence fault or state fault. Must show as RED on the UI. One alarm message per machine fault. A machine cannot be faulted and running simultaneously.</div></div></div>
-        <div class="alarm-card"><div class="alarm-dot" style="background:#ff9500"></div><div class="alarm-body"><div class="alarm-priority">Warning · Medium Priority</div><div class="alarm-title">Condition that may stop the machine</div><div class="alarm-desc">Any alarm that may cause a future stoppage — e.g. low limit switches on tanks, temperature warnings. Shows as YELLOW on the UI.</div></div></div>
+        <div class="alarm-card"><div class="alarm-dot" style="background:#ff9500"></div><div class="alarm-body"><div class="alarm-priority">Warning · Medium Priority</div><div class="alarm-title">Condition that may stop the machine</div><div class="alarm-desc">Any alarm that may cause a future stoppage (low limit switches on tanks, temperature warnings). Shows as YELLOW on the UI.</div></div></div>
         <div class="alarm-card"><div class="alarm-dot" style="background:#aeaeb2"></div><div class="alarm-body"><div class="alarm-priority">Diagnostic · Informational</div><div class="alarm-title">Possible issue, not a confirmed stop cause</div><div class="alarm-desc">Indicates an issue but cannot be determined as the reason the machine stopped. Does not halt the machine.</div></div></div>
       </div>
       <div class="sec-label">Process Alarms — Continuous Machines</div>
@@ -580,7 +580,7 @@
     <div class="detail-panel" id="topic-hmi-colors">
       <div class="d-section-tag"><div class="d-dot" style="background:#ff9500"></div><span style="color:#ff9500">HMI</span><span style="color:var(--text-dim)">&nbsp;·&nbsp;5.0</span></div>
       <div class="d-title">HMI Color Standards</div>
-      <p class="prose">A consistent color language reduces operator training time and prevents misinterpretation of machine states. These standards apply to all operator-facing views built in Ignition SCADA.</p>
+      <p class="prose">A consistent color language reduces operator training time and prevents misinterpretation of machine states. These standards would apply to all operator facing views built in Ignition SCADA and are based on best practices established in the book 'The High Performance HMI Handbook' by  Bill Hollifield. </p>
       <div class="sec-label" style="margin-bottom:14px">Standard Palette</div>
       <div class="swatch-grid">
         <div class="swatch"><div class="sw-color" style="background:#00D900"></div><div class="sw-info"><div class="sw-name">Green</div><div class="sw-hex">#00D900</div><div class="sw-meaning">ON, OPEN, RUNNING, AUTO</div></div></div>
@@ -617,24 +617,24 @@
           <thead><tr><th style="width:190px">Element</th><th>Specification</th></tr></thead>
           <tbody>
             <tr><td><span class="def-term">Primary Header</span></td><td class="def-desc">General navigation and user information. Docked at the bottom of the screen.</td></tr>
-            <tr><td><span class="def-term">Secondary Header</span></td><td class="def-desc">Zone-specific control: Logo, Machine Name, State, Safety Status, Mode, Interlocks/Permissives, and control buttons (Home, Start, Abort, Reset). Docked at the top.</td></tr>
-            <tr><td><span class="def-term">Navigation Bar</span></td><td class="def-desc">Docked on the left-hand side.</td></tr>
-            <tr><td><span class="def-term">Device Control Panel</span></td><td class="def-desc">Docked on the right side. Opens as a sidebar when clicking a device on the Machine View. Dimensions: 250 (W) × 870 (H).</td></tr>
+            <tr><td><span class="def-term">Secondary Header</span></td><td class="def-desc">Zone specific control: Logo, Machine Name, State, Safety Status, Mode, Interlocks/Permissives, and control buttons (Home, Start, Abort, Reset). Docked at the top.</td></tr>
+            <tr><td><span class="def-term">Navigation Bar</span></td><td class="def-desc">Docked on the left hand side.</td></tr>
+            <tr><td><span class="def-term">Device Control Panel</span></td><td class="def-desc">Docked on the right side. Opens as a sidebar when clicking a device on the Machine View.</td></tr>
           </tbody>
         </table>
       </div>
       <div class="sec-label">Required Tabs</div>
       <div class="alarm-stack" style="margin-bottom:24px;">
         <div class="alarm-card"><div class="alarm-dot" style="background:#0071e3"></div><div class="alarm-body"><div class="alarm-priority">Machine View / P&amp;ID Tab</div><div class="alarm-title">Discrete: Machine View · Continuous: P&amp;ID</div><div class="alarm-desc">All sensors and devices clearly visible. Faulted devices turn Red. Selecting a device opens the control sidebar, indicated by a blue border. Sequencer: current sequence step must be visible; sensors highlighted if a step is hanging waiting for a specific value.</div></div></div>
-        <div class="alarm-card"><div class="alarm-dot" style="background:#5856d6"></div><div class="alarm-body"><div class="alarm-priority">Commission Tab · Password Protected</div><div class="alarm-title">Commissioning &amp; maintenance features</div><div class="alarm-desc">All features needed for commissioning or maintenance but not continuous operations. Editing offsets, calibrating, controlling via sequences not triggered by upper-level software.</div></div></div>
-        <div class="alarm-card"><div class="alarm-dot" style="background:#ff3b30"></div><div class="alarm-body"><div class="alarm-priority">Safety Tab</div><div class="alarm-title">Safety zone overview + Request to Enter</div><div class="alarm-desc">View of all safety devices in a safety zone. Contains Request to Enter functionality that brings equipment to a controlled stop in an auto-recoverable state.</div></div></div>
-        <div class="alarm-card"><div class="alarm-dot" style="background:#ff9500"></div><div class="alarm-body"><div class="alarm-priority">Alarms Tab</div><div class="alarm-title">Active Alarms + Alarm History</div><div class="alarm-desc">Alarm summary sorted by priority. Alarm history tied to a database. Two sub-tabs: Active Alarms and Alarm History.</div></div></div>
+        <div class="alarm-card"><div class="alarm-dot" style="background:#5856d6"></div><div class="alarm-body"><div class="alarm-priority">Commission Tab · Password Protected</div><div class="alarm-title">Commissioning &amp; maintenance features</div><div class="alarm-desc">All features needed for commissioning or maintenance but not continuous operations. Editing offsets, calibrating, controlling via sequences not triggered by upper level software.</div></div></div>
+        <div class="alarm-card"><div class="alarm-dot" style="background:#ff3b30"></div><div class="alarm-body"><div class="alarm-priority">Safety Tab</div><div class="alarm-title">Safety zone overview + Request to Enter</div><div class="alarm-desc">View of all safety devices in a safety zone. Contains Request to Enter functionality that brings equipment to a controlled stop in an auto recoverable state.</div></div></div>
+        <div class="alarm-card"><div class="alarm-dot" style="background:#ff9500"></div><div class="alarm-body"><div class="alarm-priority">Alarms Tab</div><div class="alarm-title">Active Alarms + Alarm History</div><div class="alarm-desc">Alarm summary sorted by priority. Alarm history tied to a database. Two sub tabs: Active Alarms and Alarm History.</div></div></div>
       </div>
       <div class="sec-label">Device Faceplate Rules</div>
       <div class="table-wrap">
         <table class="def-table">
           <tbody>
-            <tr><td><span class="def-term">Auto / Manual Toggle</span></td><td class="def-desc">All device interfaces must allow toggling between Manual and Auto while the parent is in Auto. Manual override on a child is time-limited and configurable by access level.</td></tr>
+            <tr><td><span class="def-term">Auto / Manual Toggle</span></td><td class="def-desc">All device interfaces must allow toggling between Manual and Auto while the parent is in Auto. Manual override on a child is time limited and configurable by access level.</td></tr>
             <tr><td><span class="def-term">Commands Available</span></td><td class="def-desc">Only Operator Commands (ocmd) available from the UI. Program Commands (pcmd) are not exposed to operators.</td></tr>
             <tr><td><span class="def-term">Trends</span></td><td class="def-desc">Include historical trends wherever room allows. Prioritize process equipment and sensors for operational context.</td></tr>
           </tbody>
@@ -665,7 +665,7 @@
         <table class="def-table">
           <tbody>
             <tr><td><span class="def-term">P&amp;ID Exists</span></td><td class="def-desc">Device tagging on HMI overview and IO screens follows the existing P&amp;ID convention exactly.</td></tr>
-            <tr><td><span class="def-term">No P&amp;ID</span></td><td class="def-desc">HMI overview uses human-readable formats. IO screen uses human-readable and/or schematic reference descriptions.</td></tr>
+            <tr><td><span class="def-term">No P&amp;ID</span></td><td class="def-desc">HMI overview uses human-readable formats. IO screen uses human readable and/or schematic reference descriptions.</td></tr>
           </tbody>
         </table>
       </div>
@@ -690,7 +690,7 @@ const machineStates = [
 
 const moduleStates = [
   { id:'starting', name:'Starting', type:'acting', desc:'Puts the module in a known state, then transitions directly into Started. Should not involve a complex sequence, but may enforce valve positions or device states. All alarms cleared.', cmds:['Abort'] },
-  { id:'started',  name:'Started',  type:'acting', desc:'Actively producing or ready to produce based on a selected recipe. Sub-states of Started are machine-specific.', cmds:['Stop','Abort'] },
+  { id:'started',  name:'Started',  type:'acting', desc:'Actively producing or ready to produce based on a selected recipe. Sub states of Started are machine-specific.', cmds:['Stop','Abort'] },
   { id:'stopping', name:'Stopping', type:'acting', desc:'Immediate stop of the module and its components.', cmds:[] },
   { id:'mstopped', name:'Stopped',  type:'wait',   desc:'Safe state is NOT guaranteed and product may not be good. The only automated recovery path is to Start the module again. Otherwise, a Reset command may be issued.', cmds:['Start'] },
 ];
@@ -713,7 +713,7 @@ function selectState(s, gridId, detailId) {
   const box = document.getElementById(detailId);
   const cmdsHTML = s.cmds.length
     ? s.cmds.map(c => `<span class="cmd-tag">${c}</span>`).join('')
-    : `<span style="color:var(--text-dim);font-size:12px">No manual commands available in this state — transitions occur automatically or via interrupt.</span>`;
+    : `<span style="color:var(--text-dim);font-size:12px">No manual commands available in this state, transitions occur automatically or via interrupt.</span>`;
   box.innerHTML = `<div class="sd-title">${s.name} — ${s.type === 'acting' ? 'Acting State' : 'Wait State'}</div><div>${s.desc}</div><div class="cmd-row">${cmdsHTML}</div>`;
   box.classList.add('show');
 }
